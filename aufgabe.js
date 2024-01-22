@@ -21,6 +21,7 @@ const aufgabe_bearbeiten_aufgabeninhalt_input = document.getElementById("aufgabe
 
 const aufgabe_bearbeiten_button = document.getElementById("aufgabe_bearbeiten_button");
 const aufgabe_bearbeiten_cancel_button = document.getElementById("aufgabe_bearbeiten_cancel_button");
+var aufgabe_bearbeiten_submit_button = document.getElementById("aufgabe_bearbeiten_submit_button");
 
 const file_upload_form = document.getElementById("file_upload_form");
 
@@ -97,6 +98,16 @@ file_upload_submit_button.addEventListener("click", function(event) {
     uploadFile();
 });
 
+aufgabe_bearbeiten_submit_button.type = "button";
+var newButton = aufgabe_bearbeiten_submit_button.cloneNode(true);
+aufgabe_bearbeiten_submit_button.parentNode.replaceChild(newButton, aufgabe_bearbeiten_submit_button);
+
+aufgabe_bearbeiten_submit_button = newButton;
+aufgabe_bearbeiten_submit_button.addEventListener("click", function(event) {
+    event.preventDefault();
+    changeAufgabe();
+});
+
 aufgabe_reminder_speichern_button.addEventListener("click", function(event) {
     const eingabe_datum = aufgabe_reminder_input_field.value;
 
@@ -120,6 +131,26 @@ function put_aufgabendate_to_db(aufgabendate) {
     })
     .catch((error) => {
         console.error("Fehler beim schreiben in DB:", error);
+    });
+}
+
+function changeAufgabe() {
+    const new_aufgabenname = aufgabe_bearbeiten_aufgabenname_input.value;
+    const new_zustaendiger = aufgabe_bearbeiten_mitarbeiter_select.value;
+    const new_aufgabeninhalt = aufgabe_bearbeiten_aufgabeninhalt_input.value;
+
+    const docRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
+
+    docRef.update({
+        titel: new_aufgabenname,
+        verantwortlicher: new_zustaendiger,
+        beschreibung: new_aufgabeninhalt
+    })
+    .then(() => {
+        console.log("Aufgabe bearbeitet");
+    })
+    .catch((error) => {
+        console.error("Fehler beim Bearbeiten der Aufgabe:", error);
     });
 }
 
