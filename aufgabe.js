@@ -404,6 +404,18 @@ async function buildPage_all(user) {
     }
 
     days_left_text.innerText = get_tage_differenz(get_today_string(), information.aufgabe.prognostiziertes_abschlussdatum);
+
+    aufgabe_bearbeiten_aufgabenname_input.value = information.aufgabe.titel;
+    aufgabe_bearbeiten_aufgabeninhalt_input.value = information.aufgabe.beschreibung;
+    
+    for (mitarbeiter_id in information.mitarbeiter) {
+        const mitarbeiter_option = document.createElement("option");
+        mitarbeiter_option.value = mitarbeiter_id;
+        mitarbeiter_option.innerText = information.mitarbeiter[mitarbeiter_id].vorname + " " + information.mitarbeiter[mitarbeiter_id].nachname;
+        aufgabe_bearbeiten_mitarbeiter_select.appendChild(mitarbeiter_option);
+    }
+
+    aufgabe_bearbeiten_mitarbeiter_select.value = information.aufgabe.verantwortlicher;
 }
 
 async function buildPage_admin(user) {
