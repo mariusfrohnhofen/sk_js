@@ -27,7 +27,22 @@ const aufgabe_reminder_container = document.getElementById("aufgabe_reminder_con
 const aufgabe_reminder_speichern_button = document.getElementById("aufgabe_reminder_speichern_button");
 const aufgabe_reminder_input_field = document.getElementById("aufgabe_reminder_input_field");
 
+const days_left_text = document.getElementById("days_left_text");
+
 const currentPath = window.location.pathname;
+
+function get_tage_differenz(von, bis) {
+    if (von == "-" || bis == "-") {
+        return "-";
+    }
+
+    var date1 = new Date(von);
+    var date2 = new Date(bis);
+
+    var millis = datum2 - datum1;
+
+    return millis / (1000 * 60 * 60 * 24);
+}
 
 function get_today_string() {
     var heute = new Date();
@@ -374,6 +389,8 @@ async function buildPage_all(user) {
     if (information.aufgabe.prognostiziertes_abschlussdatum != null) {
         aufgabe_reminder_container.style.display = "none";
     }
+
+    days_left_text.innerText = get_tage_differenz(get_today_string(), information.aufgabe.prognostiziertes_abschlussdatum);
 }
 
 async function buildPage_admin(user) {
