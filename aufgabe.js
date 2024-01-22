@@ -39,7 +39,7 @@ const days_left_text = document.getElementById("days_left_text");
 const currentPath = window.location.pathname;
 
 function get_tage_differenz(von, bis) {
-    if (von == "-" || bis == "-") {
+    if (von == "-" || bis == "-" || bis == null) {
         return "-";
     }
 

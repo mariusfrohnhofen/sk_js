@@ -402,7 +402,7 @@ async function buildPage_all(user) {
     for (datei_id in information.dateien) {
         const projektdatei_table_row = get_projektdokument_table_row(
             information.dateien[datei_id].file_id,
-            information.dateien[datei_id].file_id
+            information.dateien[datei_id].titel
         )
 
         document.getElementById("projektdokumente_rows").appendChild(projektdatei_table_row);
@@ -434,9 +434,6 @@ async function buildPage_all(user) {
     projekt_bearbeiten_projektname_input.value = information.projekt.titel;
     projekt_bearbeiten_auftraggeber_input.value = information.projekt.auftraggeber;
     projekt_bearbeiten_deadline_input.value = information.projekt.deadline;
-
-    aufgabe_erstellen_aufgabenname_input.value = information.aufgabe.titel;
-    aufgabe_erstellen_aufgabeninhalt_input.value = information.aufgabe.beschreibung;
     
     for (mitarbeiter_id in information.mitarbeiter) {
         const mitarbeiter_option = document.createElement("option");
