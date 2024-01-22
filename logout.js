@@ -1,2 +1,4 @@
-firebase.auth().signOut();
-location.href = "/";
+firebase.auth().signOut()
+.then(() => {
+    location.href = "/";
+});

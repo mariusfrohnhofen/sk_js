@@ -7,7 +7,12 @@ const staff_data_table = document.getElementById("staff_data_table");
 
 const alle_projekte_tables = document.getElementById("alle_projekte_tables");
 const alle_aufgaben_tables = document.getElementById("alle_aufgaben_tables");
-const handlungsbedarf_tables= document.getElementById("handlungsbedarf_tables");
+const handlungsbedarf_tables = document.getElementById("handlungsbedarf_tables");
+
+// Tabellen ausblenden
+alle_projekte_tables.style.display = "none";
+alle_aufgaben_tables.style.display = "none";
+handlungsbedarf_tables.style.display = "none";
 
 const currentPath = window.location.pathname;
 
@@ -16,9 +21,55 @@ var information = {
     "company": {},
     "projekte": {},
     "aufgaben": {},
-    "dateien": {},
     "mitarbeiter": {}
 };
+
+function uploadFile() {
+    const fileInput = document.getElementById('fileInput');
+    const file = fileInput.files[0];
+
+    if (file) {
+        const storageRef = storage.ref();
+        const fileRef = storageRef.child(file.name);
+
+        fileRef.put(file).then((snapshot) => {
+            console.log('File Uploaded Successfully!');
+            // Hier könntest du weitere Aktionen ausführen, z.B. die URL der hochgeladenen Datei verwenden.
+        }).catch((error) => {
+            console.error('Error uploading file:', error);
+        });
+    } else {
+        console.error('No file selected.');
+    }
+}
+
+function timestamp_to_date(timestamp) {
+    if (timestamp == null) {
+        return "-";
+    }
+
+    const milliseconds = timestamp.seconds * 1000 + Math.round(timestamp.nanoseconds / 1e6);
+
+    // Ein Date-Objekt erstellen
+    const date = new Date(milliseconds);
+
+    // Datum in das gewünschte Format umwandeln: DD.MM.YYYY
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Monate sind 0-basiert, daher +1
+    const year = date.getFullYear();
+
+    return `${day}.${month}.${year}`;
+}
+
+function formatEuro(number) {
+    // Die 'de-DE' Locale wird verwendet, um das Euro-Format zu erzwingen
+    const formattedEuro = number.toLocaleString('de-DE', {
+        style: 'currency',
+        currency: 'EUR'
+    });
+  
+    return formattedEuro;
+}
 
 function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_abgeschlossen, aufgaben_gesamt, auftraggeber, prognostizierte_fertigstellung, deadline, dealvolumen) {
     const data_table_row = document.createElement("div");
@@ -92,7 +143,7 @@ function get_aufgabe_table_row(aufgabe_id, titel, status, status_color, projektn
 
     const prognostizierte_fertigstellung_div = document.createElement("div");
     prognostizierte_fertigstellung_div.classList.add("text-100", "medium");
-    prognostizierte_fertigstellung_div.innerText = prognostizierte_fertigstellung;
+    prognostizierte_fertigstellung_div.innerText = timestamp_to_date(prognostizierte_fertigstellung);
     data_table_row.appendChild(prognostizierte_fertigstellung_div);
 
     data_table_row.addEventListener("click", (event) => {
@@ -188,8 +239,8 @@ async function buildPage_admin(user) {
             information["projekte"][projekt_id]["aufgaben"].length,
             information["projekte"][projekt_id]["auftraggeber"],
             "xx.xx.xxxx",
-            "xx.xx.xxxx",
-            information["projekte"][projekt_id]["dealvolumen"]
+            timestamp_to_date(information.projekte[projekt_id].deadline),
+            formatEuro(information["projekte"][projekt_id]["dealvolumen"])
         );
 
         document.getElementById("project_rows_div").appendChild(data_table_row);
@@ -219,7 +270,7 @@ async function buildPage_staff(user) {
                 "-"
             )
 
-            docuemnt.getElementById("handlungsbedarf_rows_div").appendChild(aufgabe_table_row);
+            document.getElementById("handlungsbedarf_rows_div").appendChild(aufgabe_table_row);
         }
         else {
             const aufgabe_table_row = get_aufgabe_table_row(
@@ -231,7 +282,7 @@ async function buildPage_staff(user) {
                 information.aufgaben[aufgabe_id].prognostizierte_fertigstellung
             )
 
-            docuemnt.getElementById("aufgaben_rows_div").appendChild(aufgabe_table_row);
+            document.getElementById("aufgaben_rows_div").appendChild(aufgabe_table_row);
         }
     }
 }
