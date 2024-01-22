@@ -23,8 +23,6 @@ const aufgabe_bearbeiten_button = document.getElementById("aufgabe_bearbeiten_bu
 const aufgabe_bearbeiten_cancel_button = document.getElementById("aufgabe_bearbeiten_cancel_button");
 var aufgabe_bearbeiten_submit_button = document.getElementById("aufgabe_bearbeiten_submit_button");
 
-const file_upload_form = document.getElementById("file_upload_form");
-
 const staff_breadcrum_projekt = document.getElementById("staff_breadcrum_projekt");
 const staff_breadcrum_aufgabe = document.getElementById("staff_breadcrum_aufgabe");
 const staff_breadcrum_container = document.getElementById("staff_breadcrum_container");
@@ -160,9 +158,8 @@ function uploadFile() {
     file_upload_submit_button.disabled = true;
     const file = file_upload_input_field.files[0];
 
-    // id für file in storage festlegen
     const file_id = uuidv4();
-    // hochladen
+
     if (file) {
         const storageRef = storage.ref();
         const fileRef = storageRef.child(file_id);
@@ -207,9 +204,6 @@ function uploadFile() {
     } else {
         console.error("No file selected.");
     }
-    // dokument in dateien anlegen
-    // datei in aufgabe verlinken
-    // Seite refreshen
 }
 
 function deleteFile(file_id) {

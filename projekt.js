@@ -29,6 +29,27 @@ const aufgabe_erstellen_aufgabeninhalt_input = document.getElementById("aufgabe_
 const aufgabe_erstellen_cancel_button = document.getElementById("aufgabe_erstellen_cancel_button");
 var aufgabe_erstellen_submit_button = document.getElementById("aufgabe_erstellen_submit_button");
 
+const file_upload_overlay = document.getElementById("file_upload_overlay");
+const file_upload_button = document.getElementById("file_upload_button");
+const file_upload_input_field = document.getElementById("file_upload_input_field");
+var file_upload_submit_button = document.getElementById("file_upload_submit_button");
+
+file_upload_input_field.type = "file";
+file_upload_overlay.style.display = "none";
+file_upload_button.addEventListener("click", () => {
+    file_upload_overlay.style.display = "block";
+});
+
+file_upload_submit_button.type = "button";
+var newButton = file_upload_submit_button.cloneNode(true);
+file_upload_submit_button.parentNode.replaceChild(newButton, file_upload_submit_button);
+
+file_upload_submit_button = newButton;
+file_upload_submit_button.addEventListener("click", function(event) {
+    event.preventDefault();
+    uploadFile();
+});
+
 projekt_bearbeiten_overlay.style.display = "none";
 aufgabe_erstellen_overlay.style.display = "none";
 
@@ -67,6 +88,60 @@ aufgabe_erstellen_submit_button.addEventListener("click", function(event) {
     event.preventDefault();
     createAufgabe();
 });
+
+function uploadFile() {
+    file_upload_submit_button.value = "Bitte warten...";
+    file_upload_submit_button.disabled = true;
+    const file = file_upload_input_field.files[0];
+
+    const file_id = uuidv4();
+
+    if (file) {
+        const storageRef = storage.ref();
+        const fileRef = storageRef.child(file_id);
+
+        fileRef.put(file).then((snapshot) => {
+            console.log("File uploaded successfully");
+
+            const document_id = uuidv4();
+            const document_data = {
+                ersteller: information.user.id,
+                erstellungsdatum: get_today_string(),
+                file_id: file_id,
+                titel: file.name
+            }
+
+            const collectionRef = db.collection("companies").doc(information.company.id).collection("dateien");
+
+            collectionRef.add(document_data)
+            .then((docRef) => {
+                console.log("Dokument erfolgreich hinzugefügt. ID:", docRef.id);
+
+                const documentRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+
+                documentRef.update({
+                    dateien: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+                })
+                .then(() => {
+                    console.log("Datei zum Array hinzugefügt");
+                    location.reload();
+                })
+                .catch((error) => {
+                    console.error("Fehler beim Hinzufügen der Datei zum Array:", error);
+                });
+            })
+            .catch((error) => {
+                console.error("Fehler beim Hinzufügen des Dokuments:", error);
+            });
+
+        })
+        .catch((error) => {
+            console.error("Error uploading file:", error);
+        });
+    } else {
+        console.error("No file selected.");
+    }
+}
 
 function get_today_string() {
     var heute = new Date();
@@ -310,7 +385,7 @@ function get_voraussichtliche_fertigstellung_string() {
         return "Alle Aufgaben abgeschlossen";
     }
 
-    return highest_datum
+    return datestring_to_visual_date(highest_datum)
 }
 
 async function buildPage_all(user) {
@@ -356,7 +431,7 @@ async function buildPage_all(user) {
 
     breadcrum_projekt.innerText = information.projekt.titel;
 
-    projekt_bearbeiten_auftraggeber_input.value = information.projekt.titel;
+    projekt_bearbeiten_projektname_input.value = information.projekt.titel;
     projekt_bearbeiten_auftraggeber_input.value = information.projekt.auftraggeber;
     projekt_bearbeiten_deadline_input.value = information.projekt.deadline;
 
