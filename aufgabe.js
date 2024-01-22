@@ -20,6 +20,7 @@ const aufgabe_bearbeiten_mitarbeiter_select = document.getElementById("aufgabe_b
 const aufgabe_bearbeiten_aufgabeninhalt_input = document.getElementById("aufgabe_bearbeiten_aufgabeninhalt_input");
 
 const aufgabe_bearbeiten_button = document.getElementById("aufgabe_bearbeiten_button");
+const aufgabe_bearbeiten_cancel_button = document.getElementById("aufgabe_bearbeiten_cancel_button");
 
 const file_upload_form = document.getElementById("file_upload_form");
 
@@ -73,21 +74,15 @@ var information = {
 file_upload_input_field.type = "file";
 file_upload_overlay.style.display = "none";
 file_upload_button.addEventListener("click", () => {
-    if (file_upload_overlay.style.display == "none") {
-        file_upload_overlay.style.display = "block";
-    }
-    else {
-        file_upload_overlay.style.display = "none";
-    }
+    file_upload_overlay.style.display = "block";
 });
 
 aufgabe_bearbeiten_button.addEventListener("click", () => {
-    if (aufgabe_bearbeiten_overlay.style.display == "none") {
-        aufgabe_bearbeiten_overlay.style.display = "block";
-    }
-    else {
-        aufgabe_bearbeiten_overlay.style.display = "none";
-    }
+    aufgabe_bearbeiten_overlay.style.display = "block";
+});
+
+aufgabe_bearbeiten_cancel_button.addEventListener("click", () => {
+    aufgabe_bearbeiten_overlay.style.display = "none";
 });
 
 aufgabe_bearbeiten_overlay.style.display = "none";
