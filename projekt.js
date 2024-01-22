@@ -19,7 +19,7 @@ const projekt_bearbeiten_projektname_input = document.getElementById("projekt_be
 const projekt_bearbeiten_auftraggeber_input = document.getElementById("projekt_bearbeiten_auftraggeber_input");
 const projekt_bearbeiten_deadline_input = document.getElementById("projekt_bearbeiten_deadline_input");
 const projekt_bearbeiten_cancel_button = document.getElementById("projekt_bearbeiten_cancel_button");
-const projekt_bearbeiten_submit_button = document.getElementById("projekt_bearbeiten_submit_button");
+var projekt_bearbeiten_submit_button = document.getElementById("projekt_bearbeiten_submit_button");
 
 const aufgabe_erstellen_button = document.getElementById("aufgabe_erstellen_button");
 const aufgabe_erstellen_overlay = document.getElementById("aufgabe_erstellen_overlay");
@@ -27,7 +27,7 @@ const aufgabe_erstellen_aufgabenname_input = document.getElementById("aufgabe_er
 const aufgabe_erstellen_mitarbeiter_select = document.getElementById("aufgabe_erstellen_mitarbeiter_select");
 const aufgabe_erstellen_aufgabeninhalt_input = document.getElementById("aufgabe_erstellen_aufgabeninhalt_input");
 const aufgabe_erstellen_cancel_button = document.getElementById("aufgabe_erstellen_cancel_button");
-const aufgabe_erstellen_submit_button = document.getElementById("aufgabe_erstellen_submit_button");
+var aufgabe_erstellen_submit_button = document.getElementById("aufgabe_erstellen_submit_button");
 
 projekt_bearbeiten_overlay.style.display = "none";
 aufgabe_erstellen_overlay.style.display = "none";
