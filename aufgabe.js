@@ -14,6 +14,13 @@ const file_upload_button = document.getElementById("file_upload_button");
 const file_upload_input_field = document.getElementById("file_upload_input_field");
 var file_upload_submit_button = document.getElementById("file_upload_submit_button");
 
+const aufgabe_bearbeiten_overlay = document.getElementById("aufgabe_bearbeiten_overlay");
+const aufgabe_bearbeiten_aufgabenname_input = document.getElementById("aufgabe_bearbeiten_aufgabenname_input");
+const aufgabe_bearbeiten_mitarbeiter_select = document.getElementById("aufgabe_bearbeiten_mitarbeiter_select");
+const aufgabe_bearbeiten_aufgabeninhalt_input = document.getElementById("aufgabe_bearbeiten_aufgabeninhalt_input");
+
+const aufgabe_bearbeiten_button = document.getElementById("aufgabe_bearbeiten_button");
+
 const file_upload_form = document.getElementById("file_upload_form");
 
 const staff_breadcrum_projekt = document.getElementById("staff_breadcrum_projekt");
@@ -39,7 +46,7 @@ function get_tage_differenz(von, bis) {
     var date1 = new Date(von);
     var date2 = new Date(bis);
 
-    var millis = datum2 - datum1;
+    var millis = date2 - date1;
 
     return millis / (1000 * 60 * 60 * 24);
 }
@@ -73,6 +80,17 @@ file_upload_button.addEventListener("click", () => {
         file_upload_overlay.style.display = "none";
     }
 });
+
+aufgabe_bearbeiten_button.addEventListener("click", () => {
+    if (aufgabe_bearbeiten_overlay.style.display == "none") {
+        aufgabe_bearbeiten_overlay.style.display = "block";
+    }
+    else {
+        aufgabe_bearbeiten_overlay.style.display = "none";
+    }
+});
+
+aufgabe_bearbeiten_overlay.style.display = "none";
 
 file_upload_submit_button.type = "button";
 var newButton = file_upload_submit_button.cloneNode(true);
