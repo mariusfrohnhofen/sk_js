@@ -8,6 +8,9 @@ const projektinfos_auftragssumme = document.getElementById("projektinfos_auftrag
 const projektinfos_deadline = document.getElementById("projektinfos_deadline");
 const projektinfos_voraussichtliche_fertigstellung = document.getElementById("projektinfos_voraussichtliche_fertigstellung");
 
+const breadcrum_projekt = document.getElementById("breadcrum_projekt");
+const breadcrum_home_text = document.getElementById("breadcrum_home_text");
+
 const aufgaben_counter = document.getElementById("aufgaben_counter");
 
 const currentPath = window.location.pathname;
@@ -31,22 +34,14 @@ function formatEuro(number) {
     return formattedEuro;
 }
 
-function timestamp_to_date(timestamp) {
-    if (timestamp == null) {
+function datestring_to_visual_date(datestring) {
+    if (datestring == null) {
         return "-";
     }
 
-    const milliseconds = timestamp.seconds * 1000 + Math.round(timestamp.nanoseconds / 1e6);
+    var date_parts = datestring.split("-");
 
-    // Ein Date-Objekt erstellen
-    const date = new Date(milliseconds);
-
-    // Datum in das gewünschte Format umwandeln: DD.MM.YYYY
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Monate sind 0-basiert, daher +1
-    const year = date.getFullYear();
-
-    return `${day}.${month}.${year}`;
+    return `${date_parts[2]}.${date_parts[1]}.${date_parts[0]}`;
 }
 
 function downloadFile(filePath) {
@@ -173,6 +168,20 @@ async function getInformation(user) {
     console.log(information);
 }
 
+function get_voraussichtliche_fertigstellung_string() {
+    var highest_datum = "1970-01-01";
+
+    for (aufgabe_id in information.aufgaben) {
+        if (information.aufgaben[aufgabe_id].finished) {
+            continue
+        }
+
+        if (information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum > highest_datum) {
+            highest_datum = information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum;
+        }
+    }
+}
+
 async function buildPage_all(user) {
     dropdown_company_name.innerText = information["company"]["name"];
     dropdown_user_name.innerText = information["user"]["vorname"] + " " + information["user"]["nachname"];
@@ -181,7 +190,7 @@ async function buildPage_all(user) {
 
     projektinfos_auftraggeber.innerText = information["projekt"]["auftraggeber"];
     projektinfos_auftragssumme.innerText = formatEuro(information["projekt"]["dealvolumen"]);
-    projektinfos_deadline.innerText = timestamp_to_date(information["projekt"]["deadline"]);
+    projektinfos_deadline.innerText = datestring_to_visual_date(information["projekt"]["deadline"]);
     projektinfos_voraussichtliche_fertigstellung.innerText = "VORAUSSICHTLICHE FERTIGSTELLUNG";
 
     for (datei_id in information.dateien) {
@@ -206,13 +215,23 @@ async function buildPage_all(user) {
             "Offen",
             "green",
             information.aufgaben[aufgaben_id].verantwortlicher,
-            timestamp_to_date(information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum)
+            datestring_to_visual_date(information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum)
         );
 
         document.getElementById("aufgaben_rows").appendChild(aufgabe_table_row);
     }
 
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
+
+    breadcrum_projekt.innerText = information.projekt.titel;
+}
+
+async function buildPage_admin(user) {
+    breadcrum_home_text.innerText = "Meine Projektübersicht";
+}
+
+async function buildPage_staff(user) {
+    breadcrum_home_text.innerText = "Meine Aufgabenübersicht";
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {
@@ -220,6 +239,13 @@ const auth = firebase.auth().onAuthStateChanged(async (user) => {
         await getInformation(user);
 
         await buildPage_all(user);
+
+        if (information["user"]["rolle"] == "admin") {
+            await buildPage_admin(user);
+        }
+        else if (information["user"]["rolle"] == "staff") {
+            await buildPage_staff(user);
+        }
 
     } else {
         location.href = "/";

@@ -148,6 +148,7 @@ function changeAufgabe() {
     })
     .then(() => {
         console.log("Aufgabe bearbeitet");
+        location.reload();
     })
     .catch((error) => {
         console.error("Fehler beim Bearbeiten der Aufgabe:", error);
