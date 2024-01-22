@@ -21,7 +21,24 @@ const projekt_bearbeiten_deadline_input = document.getElementById("projekt_bearb
 const projekt_bearbeiten_cancel_button = document.getElementById("projekt_bearbeiten_cancel_button");
 const projekt_bearbeiten_submit_button = document.getElementById("projekt_bearbeiten_submit_button");
 
+const aufgabe_erstellen_button = document.getElementById("aufgabe_erstellen_button");
+const aufgabe_erstellen_overlay = document.getElementById("aufgabe_erstellen_overlay");
+const aufgabe_erstellen_aufgabenname_input = document.getElementById("aufgabe_erstellen_aufgabenname_input");
+const aufgabe_erstellen_mitarbeiter_select = document.getElementById("aufgabe_erstellen_mitarbeiter_select");
+const aufgabe_erstellen_aufgabeninhalt_input = document.getElementById("aufgabe_erstellen_aufgabeninhalt_input");
+const aufgabe_erstellen_cancel_button = document.getElementById("aufgabe_erstellen_cancel_button");
+const aufgabe_erstellen_submit_button = document.getElementById("aufgabe_erstellen_submit_button");
+
 projekt_bearbeiten_overlay.style.display = "none";
+aufgabe_erstellen_overlay.style.display = "none";
+
+aufgabe_erstellen_cancel_button.addEventListener("click", () => {
+    aufgabe_erstellen_overlay.style.display = "none";
+})
+
+aufgabe_erstellen_button.addEventListener("click", () => {
+    aufgabe_erstellen_overlay.style.display = "block";
+})
 
 projekt_bearbeiten_cancel_button.addEventListener("click", () => {
     projekt_bearbeiten_overlay.style.display = "none";
@@ -32,13 +49,23 @@ projekt_bearbeiten_button.addEventListener("click", () => {
 });
 
 projekt_bearbeiten_submit_button.type = "button";
-var newButton = file_upload_submit_button.cloneNode(true);
+var newButton = projekt_bearbeiten_submit_button.cloneNode(true);
 projekt_bearbeiten_submit_button.parentNode.replaceChild(newButton, projekt_bearbeiten_submit_button);
 
 projekt_bearbeiten_submit_button = newButton;
 projekt_bearbeiten_submit_button.addEventListener("click", function(event) {
     event.preventDefault();
     changeProjekt();
+});
+
+aufgabe_erstellen_submit_button.type = "button";
+var newButton = aufgabe_erstellen_submit_button.cloneNode(true);
+aufgabe_erstellen_submit_button.parentNode.replaceChild(newButton, aufgabe_erstellen_submit_button);
+
+aufgabe_erstellen_submit_button = newButton;
+aufgabe_erstellen_submit_button.addEventListener("click", function(event) {
+    event.preventDefault();
+    createAufgabe();
 });
 
 function get_today_string() {
@@ -53,7 +80,62 @@ projekt_bearbeiten_deadline_input.type = "date";
 projekt_bearbeiten_deadline_input.min = get_today_string();
 
 function changeProjekt() {
-    //TODO
+    const new_projektname = projekt_bearbeiten_projektname_input.value;
+    const new_auftraggeber = projekt_bearbeiten_auftraggeber_input.value;
+    const new_deadline = projekt_bearbeiten_deadline_input.value;
+
+    const docRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+
+    docRef.update({
+        titel: new_projektname,
+        auftraggeber: new_auftraggeber,
+        deadline: new_deadline
+    })
+    .then(() => {
+        console.log("Projekt bearbeitet");
+        location.reload();
+    })
+    .catch((error) => {
+        console.error("Fehler beim Bearbeiten des Projekts:", error);
+    });
+}
+
+function createAufgabe() {
+    const new_aufgabenname = aufgabe_erstellen_aufgabenname_input.value;
+    const new_zustaendiger = aufgabe_erstellen_mitarbeiter_select.value;
+    const new_aufgabeninhalt = aufgabe_erstellen_aufgabeninhalt_input.value;
+
+    const new_aufgaben_data = {
+        beschreibung: new_aufgabeninhalt,
+        dateien: [],
+        finished: false,
+        prognostiziertes_abschlussdatum: null,
+        titel: new_aufgabenname,
+        verantwortlicher: new_zustaendiger
+    }
+
+    const collectionRef = db.collection("companies").doc(information.company.id).collection("aufgaben");
+
+    collectionRef.add(new_aufgaben_data)
+    .then((docRef) => {
+        console.log("Dokument erfolgreich hinzugefügt. ID:", docRef.id);
+
+        const documentRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+
+        documentRef.update({
+            aufgaben: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+        })
+        .then(() => {
+            console.log("Aufgabe zum Array hinzugefügt");
+            location.reload();
+        })
+        .catch((error) => {
+            console.error("Fehler beim Hinzufügen der Aufgabe zum Array:", error);
+        });
+    })
+    .catch((error) => {
+        console.error("Fehler beim Hinzufügen des Dokuments:", error);
+    });
 }
 
 const currentPath = window.location.pathname;
@@ -277,6 +359,16 @@ async function buildPage_all(user) {
     projekt_bearbeiten_auftraggeber_input.value = information.projekt.titel;
     projekt_bearbeiten_auftraggeber_input.value = information.projekt.auftraggeber;
     projekt_bearbeiten_deadline_input.value = information.projekt.deadline;
+
+    aufgabe_erstellen_aufgabenname_input.value = information.aufgabe.titel;
+    aufgabe_erstellen_aufgabeninhalt_input.value = information.aufgabe.beschreibung;
+    
+    for (mitarbeiter_id in information.mitarbeiter) {
+        const mitarbeiter_option = document.createElement("option");
+        mitarbeiter_option.value = mitarbeiter_id;
+        mitarbeiter_option.innerText = information.mitarbeiter[mitarbeiter_id].vorname + " " + information.mitarbeiter[mitarbeiter_id].nachname;
+        aufgabe_erstellen_mitarbeiter_select.appendChild(mitarbeiter_option);
+    }
 }
 
 async function buildPage_admin(user) {
