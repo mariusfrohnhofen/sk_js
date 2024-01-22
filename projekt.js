@@ -13,6 +13,49 @@ const breadcrum_home_text = document.getElementById("breadcrum_home_text");
 
 const aufgaben_counter = document.getElementById("aufgaben_counter");
 
+const projekt_bearbeiten_button = document.getElementById("projekt_bearbeiten_button");
+const projekt_bearbeiten_overlay = document.getElementById("projekt_bearbeiten_overlay");
+const projekt_bearbeiten_projektname_input = document.getElementById("projekt_bearbeiten_projektname_input");
+const projekt_bearbeiten_auftraggeber_input = document.getElementById("projekt_bearbeiten_auftraggeber_input");
+const projekt_bearbeiten_deadline_input = document.getElementById("projekt_bearbeiten_deadline_input");
+const projekt_bearbeiten_cancel_button = document.getElementById("projekt_bearbeiten_cancel_button");
+const projekt_bearbeiten_submit_button = document.getElementById("projekt_bearbeiten_submit_button");
+
+projekt_bearbeiten_overlay.style.display = "none";
+
+projekt_bearbeiten_cancel_button.addEventListener("click", () => {
+    projekt_bearbeiten_overlay.style.display = "none";
+});
+
+projekt_bearbeiten_button.addEventListener("click", () => {
+    projekt_bearbeiten_overlay.style.display = "block";
+});
+
+projekt_bearbeiten_submit_button.type = "button";
+var newButton = file_upload_submit_button.cloneNode(true);
+projekt_bearbeiten_submit_button.parentNode.replaceChild(newButton, projekt_bearbeiten_submit_button);
+
+projekt_bearbeiten_submit_button = newButton;
+projekt_bearbeiten_submit_button.addEventListener("click", function(event) {
+    event.preventDefault();
+    changeProjekt();
+});
+
+function get_today_string() {
+    var heute = new Date();
+    var jahr = heute.getFullYear();
+    var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
+    var tag = ('0' + heute.getDate()).slice(-2);
+    return jahr + '-' + monat + '-' + tag;
+}
+
+projekt_bearbeiten_deadline_input.type = "date";
+projekt_bearbeiten_deadline_input.min = get_today_string();
+
+function changeProjekt() {
+    //TODO
+}
+
 const currentPath = window.location.pathname;
 
 var information = {
@@ -180,6 +223,12 @@ function get_voraussichtliche_fertigstellung_string() {
             highest_datum = information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum;
         }
     }
+
+    if (highest_datum == "1970-01-01") {
+        return "Alle Aufgaben abgeschlossen";
+    }
+
+    return highest_datum
 }
 
 async function buildPage_all(user) {
@@ -191,7 +240,7 @@ async function buildPage_all(user) {
     projektinfos_auftraggeber.innerText = information["projekt"]["auftraggeber"];
     projektinfos_auftragssumme.innerText = formatEuro(information["projekt"]["dealvolumen"]);
     projektinfos_deadline.innerText = datestring_to_visual_date(information["projekt"]["deadline"]);
-    projektinfos_voraussichtliche_fertigstellung.innerText = "VORAUSSICHTLICHE FERTIGSTELLUNG";
+    projektinfos_voraussichtliche_fertigstellung.innerText = get_voraussichtliche_fertigstellung_string();
 
     for (datei_id in information.dateien) {
         const projektdatei_table_row = get_projektdokument_table_row(
@@ -224,6 +273,10 @@ async function buildPage_all(user) {
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
 
     breadcrum_projekt.innerText = information.projekt.titel;
+
+    projekt_bearbeiten_auftraggeber_input.value = information.projekt.titel;
+    projekt_bearbeiten_auftraggeber_input.value = information.projekt.auftraggeber;
+    projekt_bearbeiten_deadline_input.value = information.projekt.deadline;
 }
 
 async function buildPage_admin(user) {
