@@ -23,6 +23,7 @@ const projekt_bearbeiten_auftraggeber_input = document.getElementById("projekt_b
 const projekt_bearbeiten_deadline_input = document.getElementById("projekt_bearbeiten_deadline_input");
 const projekt_bearbeiten_cancel_button = document.getElementById("projekt_bearbeiten_cancel_button");
 const projekt_bearbeiten_beschreibung_input = document.getElementById("projekt_bearbeiten_beschreibung_input");
+const projekt_bearbeiten_auftragssumme_input = document.getElementById("projekt_bearbeiten_auftragssumme_input");
 var projekt_bearbeiten_submit_button = document.getElementById("projekt_bearbeiten_submit_button");
 
 const aufgabe_erstellen_button = document.getElementById("aufgabe_erstellen_button");
@@ -181,6 +182,7 @@ function changeProjekt() {
     const new_auftraggeber = projekt_bearbeiten_auftraggeber_input.value;
     const new_deadline = projekt_bearbeiten_deadline_input.value;
     const new_beschreibung = projekt_bearbeiten_beschreibung_input.value;
+    const new_auftragssumme = projekt_bearbeiten_auftragssumme_input.value;
 
     const docRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
 
@@ -188,7 +190,8 @@ function changeProjekt() {
         titel: new_projektname,
         auftraggeber: new_auftraggeber,
         deadline: new_deadline,
-        beschreibung: new_beschreibung
+        beschreibung: new_beschreibung,
+        dealvolumen: new_auftragssumme
     })
     .then(() => {
         console.log("Projekt bearbeitet");
@@ -472,7 +475,7 @@ async function buildPage_all(user) {
 
     heading.innerText = information["projekt"]["titel"];
 
-    days_left_text.innerText = get_tage_differenz(get_today_string(), information.aufgabe.prognostiziertes_abschlussdatum);
+    days_left_text.innerText = get_tage_differenz(get_today_string(), information.projekt.deadline);
 
     projektinfos_auftraggeber.innerText = information.projekt.auftraggeber;
     projektinfos_auftragssumme.innerText = formatEuro(information["projekt"]["dealvolumen"]);
@@ -516,6 +519,7 @@ async function buildPage_all(user) {
     projekt_bearbeiten_auftraggeber_input.value = information.projekt.auftraggeber;
     projekt_bearbeiten_deadline_input.value = information.projekt.deadline;
     projekt_bearbeiten_beschreibung_input.value = information.projekt.beschreibung;
+    projekt_bearbeiten_auftragssumme_input.value = information.projekt.dealvolumen;
     
     for (mitarbeiter_id in information.mitarbeiter) {
         const mitarbeiter_option = document.createElement("option");

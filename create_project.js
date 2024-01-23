@@ -2,6 +2,7 @@ const projektname_input = document.getElementById("projektname_input");
 const auftraggeber_input = document.getElementById("auftraggeber_input");
 const deadline_input = document.getElementById("deadline_input");
 const beschreibung_input = document.getElementById("beschreibung_input");
+const auftragssumme_input = document.getElementById("auftragssumme_input");
 var submit_button = document.getElementById("submit_button");
 
 submit_button.type = "button";
@@ -36,6 +37,7 @@ function createProject() {
     const auftraggeber = auftraggeber_input.value;
     const deadline = deadline_input.value;
     const beschreibung = beschreibung_input.value;
+    const auftragssumme = auftragssumme_input.value;
 
     const collectionRef = db.collection("companies").doc(information.company.id).collection("projects");
 
@@ -47,7 +49,7 @@ function createProject() {
         beschreibung: beschreibung,
         dateien: [],
         deadline: deadline,
-        dealvolumen: 0,
+        dealvolumen: auftragssumme,
         id: newDocumentRef,
         titel: projektname,
         verantwortlicher: information.user.id
