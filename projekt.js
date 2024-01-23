@@ -40,6 +40,8 @@ const file_upload_input_field = document.getElementById("file_upload_input_field
 const file_upload_cancel_button = document.getElementById("file_upload_cancel_button");
 var file_upload_submit_button = document.getElementById("file_upload_submit_button");
 
+const aufgaben_progress_bar = document.getElementById("aufgaben_progress_bar");
+
 file_upload_input_field.type = "file";
 file_upload_overlay.style.display = "none";
 file_upload_button.addEventListener("click", () => {
@@ -513,6 +515,8 @@ async function buildPage_all(user) {
 
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
 
+    aufgaben_progress_bar.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";
+
     breadcrum_projekt.innerText = information.projekt.titel;
 
     projekt_bearbeiten_projektname_input.value = information.projekt.titel;
@@ -535,6 +539,21 @@ async function buildPage_admin(user) {
 
 async function buildPage_staff(user) {
     breadcrum_home_text.innerText = "Meine Aufgabenübersicht";
+
+    projekt_bearbeiten_button.remove();
+    projekt_bearbeiten_overlay.remove();
+    file_upload_button.remove();
+    file_upload_overlay.remove();
+}
+
+function remove_overlay() {
+    const overlay = document.getElementById("site_overlay");
+    overlay.style.transition = "opacity 0.5s ease";
+    overlay.style.opacity = 0;
+
+    setTimeout(function() {
+        overlay.remove();
+    }, 1000);
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {
@@ -549,6 +568,8 @@ const auth = firebase.auth().onAuthStateChanged(async (user) => {
         else if (information["user"]["rolle"] == "staff") {
             await buildPage_staff(user);
         }
+
+        remove_overlay();
 
     } else {
         location.href = "/";

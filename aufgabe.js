@@ -24,6 +24,8 @@ const aufgabe_bearbeiten_cancel_button = document.getElementById("aufgabe_bearbe
 const aufgabe_bearbeiten_voraussichtliche_fertigstellung_input = document.getElementById("aufgabe_bearbeiten_voraussichtliche_fertigstellung_input");
 var aufgabe_bearbeiten_submit_button = document.getElementById("aufgabe_bearbeiten_submit_button");
 
+const aufgabe_fertigstellen_button = document.getElementById("aufgabe_fertigstellen_button");
+
 const breadcrum_projekt = document.getElementById("breadcrum_projekt");
 const breadcrum_aufgabe = document.getElementById("breadcrum_aufgabe");
 const breadcrum_home_text = document.getElementById("breadcrum_home_text");
@@ -100,6 +102,10 @@ file_upload_submit_button.addEventListener("click", function(event) {
     uploadFile();
 });
 
+aufgabe_fertigstellen_button.addEventListener("click", () => {
+    aufgabe_fertigstellen();
+});
+
 aufgabe_bearbeiten_submit_button.type = "button";
 var newButton = aufgabe_bearbeiten_submit_button.cloneNode(true);
 aufgabe_bearbeiten_submit_button.parentNode.replaceChild(newButton, aufgabe_bearbeiten_submit_button);
@@ -118,7 +124,21 @@ aufgabe_reminder_speichern_button.addEventListener("click", function(event) {
     }
 
     put_aufgabendate_to_db(eingabe_datum);
-})
+});
+
+function aufgabe_fertigstellen() {
+    const docRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
+
+    docRef.update({
+        finished: true
+    })
+    .then(() => {
+        console.log("Aufgabe erfolgreich abgeschlossen");
+    })
+    .catch((error) => {
+        console.error("Fehler beim abschließen der Aufgabe:", error);
+    });
+}
 
 function put_aufgabendate_to_db(aufgabendate) {
     const documentRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
@@ -439,7 +459,7 @@ async function buildPage_all(user) {
 
     aufgabe_bearbeiten_aufgabenname_input.value = information.aufgabe.titel;
     aufgabe_bearbeiten_aufgabeninhalt_input.value = information.aufgabe.beschreibung;
-    aufgabe_bearbeiten_voraussichtliche_fertigstellung_input = information.aufgabe.prognostiziertes_abschlussdatum;
+    aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.value = information.aufgabe.prognostiziertes_abschlussdatum;
     
     for (mitarbeiter_id in information.mitarbeiter) {
         const mitarbeiter_option = document.createElement("option");
@@ -463,6 +483,16 @@ async function buildPage_staff(user) {
     breadcrum_home_text.innerText = "Meine Aufgabenübersicht";
 }
 
+function remove_overlay() {
+    const overlay = document.getElementById("site_overlay");
+    overlay.style.transition = "opacity 0.5s ease";
+    overlay.style.opacity = 0;
+
+    setTimeout(function() {
+        overlay.remove();
+    }, 1000);
+}
+
 const auth = firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
         await getInformation(user);
@@ -475,6 +505,8 @@ const auth = firebase.auth().onAuthStateChanged(async (user) => {
         else if (information["user"]["rolle"] == "staff") {
             await buildPage_staff(user);
         }
+
+        remove_overlay();
 
     } else {
         location.href = "/";

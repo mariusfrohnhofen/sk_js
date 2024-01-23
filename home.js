@@ -331,6 +331,16 @@ async function buildPage_staff(user) {
     }
 }
 
+function remove_overlay() {
+    const overlay = document.getElementById("site_overlay");
+    overlay.style.transition = "opacity 0.5s ease";
+    overlay.style.opacity = 0;
+
+    setTimeout(function() {
+        overlay.remove();
+    }, 1000);
+}
+
 const auth = firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
         await getInformation(user);
@@ -343,6 +353,8 @@ const auth = firebase.auth().onAuthStateChanged(async (user) => {
         else if (information["user"]["rolle"] == "staff") {
             await buildPage_staff(user);
         }
+
+        remove_overlay();
     } else {
         location.href = "/";
     }
