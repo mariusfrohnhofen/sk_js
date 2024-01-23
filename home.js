@@ -1,3 +1,5 @@
+// v1.0.16
+
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
 const dropdown_user_name = document.getElementById("dropdown_user_name");
@@ -236,10 +238,15 @@ function get_aufgabe_status(aufgaben_id) {
 function get_projekt_status(projekt_id) {
     var condition_found = false;
     var status = null;
+    var alle_aufgaben_abgeschlossen = true;
 
     information.projekte[projekt_id].aufgaben.forEach((aufgaben_id) => {
         if (condition_found) {
             return
+        }
+
+        if (!information.aufgaben[aufgaben_id].finished) {
+            alle_aufgaben_abgeschlossen = false;
         }
 
         if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
@@ -261,10 +268,26 @@ function get_projekt_status(projekt_id) {
         }
     });
 
+    if (alle_aufgaben_abgeschlossen) {
+        status = {
+            label: "Bereit",
+            color: "blue"
+        }
+        condition_found = true;
+    }
+
     if (get_today_string() > information.projekte[projekt_id].deadline) {
         status = {
             label: "Überzogen",
             color: "red"
+        }
+        condition_found = true;
+    }
+
+    if (information.projekte[projekt_id].finished) {
+        status = {
+            label: "Abgeschlossen",
+            color: "green"
         }
         condition_found = true;
     }

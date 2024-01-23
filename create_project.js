@@ -1,3 +1,5 @@
+// v1.0.16
+
 const projektname_input = document.getElementById("projektname_input");
 const auftraggeber_input = document.getElementById("auftraggeber_input");
 const deadline_input = document.getElementById("deadline_input");
@@ -52,7 +54,8 @@ function createProject() {
         dealvolumen: auftragssumme,
         id: newDocumentRef.id,
         titel: projektname,
-        verantwortlicher: information.user.id
+        verantwortlicher: information.user.id,
+        finished: false
     }
 
     newDocumentRef.set(new_document_data)

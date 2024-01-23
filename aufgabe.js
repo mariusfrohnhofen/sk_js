@@ -1,3 +1,5 @@
+// v1.0.16
+
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
 const dropdown_user_name = document.getElementById("dropdown_user_name");

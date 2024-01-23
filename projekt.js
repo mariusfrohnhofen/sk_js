@@ -1,3 +1,5 @@
+// v1.0.16
+
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
 const dropdown_user_name = document.getElementById("dropdown_user_name");
@@ -42,6 +44,8 @@ var file_upload_submit_button = document.getElementById("file_upload_submit_butt
 
 const aufgaben_progress_bar = document.getElementById("aufgaben_progress_bar");
 
+const projekt_fertigstellen_button = document.getElementById("projekt_fertigstellen_button");
+
 const status_badge = document.getElementById("status_badge");
 
 file_upload_input_field.type = "file";
@@ -83,6 +87,10 @@ projekt_bearbeiten_button.addEventListener("click", () => {
     projekt_bearbeiten_overlay.style.display = "block";
 });
 
+projekt_fertigstellen_button.addEventListener("click", () => {
+    projekt_fertigstellen();
+});
+
 projekt_bearbeiten_submit_button.type = "button";
 var newButton = projekt_bearbeiten_submit_button.cloneNode(true);
 projekt_bearbeiten_submit_button.parentNode.replaceChild(newButton, projekt_bearbeiten_submit_button);
@@ -114,6 +122,21 @@ function get_tage_differenz(von, bis) {
     var millis = date2 - date1;
 
     return millis / (1000 * 60 * 60 * 24);
+}
+
+function projekt_fertigstellen() {
+    const docRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+
+    docRef.update({
+        finished: true
+    })
+    .then(() => {
+        console.log("Projekt erfolgreich abgeschlossen");
+        location.reload();
+    })
+    .catch((error) => {
+        console.error("Fehler beim abschließen des Projekts:", error);
+    });
 }
 
 function uploadFile() {
@@ -266,8 +289,20 @@ function formatEuro(number) {
 }
 
 function get_projekt_status() {
+    var alle_aufgaben_abgeschlossen = true;
+
+    if (information.projekt.finished) {
+        return {
+            label: "Abgeschlossen",
+            color: "green"
+        }
+    }
 
     for (aufgaben_id in information.aufgaben) {
+        if (!information.aufgaben[aufgaben_id].finished) {
+            alle_aufgaben_abgeschlossen = false;
+        }
+
         if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
             return {
                 label: "Handlungsbedarf",
@@ -287,6 +322,13 @@ function get_projekt_status() {
         return {
             label: "Überzogen",
             color: "red"
+        }
+    }
+
+    if (alle_aufgaben_abgeschlossen) {
+        return {
+            label: "Bereit",
+            color: "blue"
         }
     }
 

@@ -1,3 +1,5 @@
+// v1.0.16
+
 //  Reference to Webflow UI ements
 const signInButton = document.getElementById('sign_in_button');
 const emailInputField = document.getElementById('email_input_field');
