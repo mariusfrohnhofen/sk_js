@@ -43,22 +43,14 @@ function uploadFile() {
     }
 }
 
-function timestamp_to_date(timestamp) {
-    if (timestamp == null) {
+function datestring_to_visual_date(datestring) {
+    if (datestring == null) {
         return "-";
     }
 
-    const milliseconds = timestamp.seconds * 1000 + Math.round(timestamp.nanoseconds / 1e6);
+    var date_parts = datestring.split("-");
 
-    // Ein Date-Objekt erstellen
-    const date = new Date(milliseconds);
-
-    // Datum in das gewünschte Format umwandeln: DD.MM.YYYY
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Monate sind 0-basiert, daher +1
-    const year = date.getFullYear();
-
-    return `${day}.${month}.${year}`;
+    return `${date_parts[2]}.${date_parts[1]}.${date_parts[0]}`;
 }
 
 function formatEuro(number) {
@@ -69,6 +61,19 @@ function formatEuro(number) {
     });
   
     return formattedEuro;
+}
+
+function get_tage_differenz(von, bis) {
+    if (von == "-" || bis == "-" || bis == null) {
+        return "-";
+    }
+
+    var date1 = new Date(von);
+    var date2 = new Date(bis);
+
+    var millis = date2 - date1;
+
+    return millis / (1000 * 60 * 60 * 24);
 }
 
 function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_abgeschlossen, aufgaben_gesamt, auftraggeber, prognostizierte_fertigstellung, deadline, dealvolumen) {
@@ -102,7 +107,7 @@ function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_ab
 
     const tage_bis_deadline_div = document.createElement("div");
     tage_bis_deadline_div.classList.add("text-100", "medium");
-    tage_bis_deadline_div.innerText = "x";
+    tage_bis_deadline_div.innerText = get_tage_differenz(get_today_string(), deadline);
     data_table_row.appendChild(tage_bis_deadline_div);
 
     const deadline_div = document.createElement("div");
@@ -143,7 +148,7 @@ function get_aufgabe_table_row(aufgabe_id, titel, status, status_color, projektn
 
     const prognostizierte_fertigstellung_div = document.createElement("div");
     prognostizierte_fertigstellung_div.classList.add("text-100", "medium");
-    prognostizierte_fertigstellung_div.innerText = timestamp_to_date(prognostizierte_fertigstellung);
+    prognostizierte_fertigstellung_div.innerText = datestring_to_visual_date(prognostizierte_fertigstellung);
     data_table_row.appendChild(prognostizierte_fertigstellung_div);
 
     data_table_row.addEventListener("click", (event) => {
@@ -151,6 +156,45 @@ function get_aufgabe_table_row(aufgabe_id, titel, status, status_color, projektn
     });
 
     return data_table_row;
+}
+
+function get_fertigstellung_datum(projekt_id) {
+    var highest = "1970-01-01";
+
+    information.projekte[projekt_id].aufgaben.forEach((aufgaben_id) => {
+        if (information.aufgaben[aufgaben_id].finished) {
+            return
+        }
+
+        if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
+            highest = null;
+            return
+        }
+
+        if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum > highest) {
+            highest = information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum;
+        }
+    });
+
+    if (highest == "1970-01-01" || highest == null) {
+        return "-"
+    }
+
+    return highest
+}
+
+get_projekt_id_from_aufgaben_id(aufgaben_id) {
+    var found_projekt_id = null;
+
+    for (projekt_id in information.projekte) {
+        information.projekte[projekt_id].aufgaben.forEach((a_id) => {
+            if (a_id == aufgaben_id) {
+                found_projekt_id = projekt_id;
+            }
+        });
+    }
+
+    return found_projekt_id
 }
 
 async function getInformation(user) {
@@ -238,8 +282,8 @@ async function buildPage_admin(user) {
             aufgaben_abgeschlossen,
             information["projekte"][projekt_id]["aufgaben"].length,
             information["projekte"][projekt_id]["auftraggeber"],
-            "xx.xx.xxxx",
-            timestamp_to_date(information.projekte[projekt_id].deadline),
+            get_fertigstellung_datum(projekt_id),
+            datestring_to_visual_date(information.projekte[projekt_id].deadline),
             formatEuro(information["projekte"][projekt_id]["dealvolumen"])
         );
 
@@ -278,8 +322,8 @@ async function buildPage_staff(user) {
                 information.aufgaben[aufgabe_id].titel,
                 "Offen",
                 "green",
-                "NAME ZUM PROJEKT",
-                information.aufgaben[aufgabe_id].prognostizierte_fertigstellung
+                information.projekte[get_projekt_id_from_aufgaben_id(aufgabe_id)].titel,
+                datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
             )
 
             document.getElementById("aufgaben_rows_div").appendChild(aufgabe_table_row);

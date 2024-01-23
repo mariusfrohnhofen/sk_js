@@ -37,7 +37,7 @@ function createProject() {
     const auftraggeber = auftraggeber_input.value;
     const deadline = deadline_input.value;
     const beschreibung = beschreibung_input.value;
-    const auftragssumme = auftragssumme_input.value;
+    const auftragssumme = parseFloat(auftragssumme_input.value);
 
     const collectionRef = db.collection("companies").doc(information.company.id).collection("projects");
 
