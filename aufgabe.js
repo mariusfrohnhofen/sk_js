@@ -12,23 +12,21 @@ const zum_projekt_button = document.getElementById("zum_projekt_button");
 const file_upload_overlay = document.getElementById("file_upload_overlay");
 const file_upload_button = document.getElementById("file_upload_button");
 const file_upload_input_field = document.getElementById("file_upload_input_field");
+const file_upload_cancel_button = document.getElementById("file_upload_cancel_button");
 var file_upload_submit_button = document.getElementById("file_upload_submit_button");
 
 const aufgabe_bearbeiten_overlay = document.getElementById("aufgabe_bearbeiten_overlay");
 const aufgabe_bearbeiten_aufgabenname_input = document.getElementById("aufgabe_bearbeiten_aufgabenname_input");
 const aufgabe_bearbeiten_mitarbeiter_select = document.getElementById("aufgabe_bearbeiten_mitarbeiter_select");
 const aufgabe_bearbeiten_aufgabeninhalt_input = document.getElementById("aufgabe_bearbeiten_aufgabeninhalt_input");
-
 const aufgabe_bearbeiten_button = document.getElementById("aufgabe_bearbeiten_button");
 const aufgabe_bearbeiten_cancel_button = document.getElementById("aufgabe_bearbeiten_cancel_button");
+const aufgabe_bearbeiten_voraussichtliche_fertigstellung_input = document.getElementById("aufgabe_bearbeiten_voraussichtliche_fertigstellung_input");
 var aufgabe_bearbeiten_submit_button = document.getElementById("aufgabe_bearbeiten_submit_button");
 
-const staff_breadcrum_projekt = document.getElementById("staff_breadcrum_projekt");
-const staff_breadcrum_aufgabe = document.getElementById("staff_breadcrum_aufgabe");
-const staff_breadcrum_container = document.getElementById("staff_breadcrum_container");
-const admin_breadcrum_projekt = document.getElementById("admin_breadcrum_projekt");
-const admin_breadcrum_aufgabe = document.getElementById("admin_breadcrum_aufgabe");
-const admin_breadcrum_container = document.getElementById("admin_breadcrum_container");
+const breadcrum_projekt = document.getElementById("breadcrum_projekt");
+const breadcrum_aufgabe = document.getElementById("breadcrum_aufgabe");
+const breadcrum_home_text = document.getElementById("breadcrum_home_text");
 
 const aufgabe_reminder_container = document.getElementById("aufgabe_reminder_container");
 const aufgabe_reminder_speichern_button = document.getElementById("aufgabe_reminder_speichern_button");
@@ -62,6 +60,8 @@ function get_today_string() {
 aufgabe_reminder_input_field.type = "date";
 aufgabe_reminder_input_field.min = get_today_string();
 
+aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.type = "date";
+
 var information = {
     "user": {},
     "company": {},
@@ -83,6 +83,10 @@ aufgabe_bearbeiten_button.addEventListener("click", () => {
 aufgabe_bearbeiten_cancel_button.addEventListener("click", () => {
     aufgabe_bearbeiten_overlay.style.display = "none";
 });
+
+file_upload_cancel_button.addEventListener("click", () => {
+    file_upload_overlay.style.display = "none";
+})
 
 aufgabe_bearbeiten_overlay.style.display = "none";
 
@@ -136,13 +140,15 @@ function changeAufgabe() {
     const new_aufgabenname = aufgabe_bearbeiten_aufgabenname_input.value;
     const new_zustaendiger = aufgabe_bearbeiten_mitarbeiter_select.value;
     const new_aufgabeninhalt = aufgabe_bearbeiten_aufgabeninhalt_input.value;
+    const new_voraussichtliche_fertigstellung = aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.value;
 
     const docRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
 
     docRef.update({
         titel: new_aufgabenname,
         verantwortlicher: new_zustaendiger,
-        beschreibung: new_aufgabeninhalt
+        beschreibung: new_aufgabeninhalt,
+        prognostiziertes_abschlussdatum: new_voraussichtliche_fertigstellung
     })
     .then(() => {
         console.log("Aufgabe bearbeitet");
@@ -433,6 +439,7 @@ async function buildPage_all(user) {
 
     aufgabe_bearbeiten_aufgabenname_input.value = information.aufgabe.titel;
     aufgabe_bearbeiten_aufgabeninhalt_input.value = information.aufgabe.beschreibung;
+    aufgabe_bearbeiten_voraussichtliche_fertigstellung_input = information.aufgabe.prognostiziertes_abschlussdatum;
     
     for (mitarbeiter_id in information.mitarbeiter) {
         const mitarbeiter_option = document.createElement("option");
@@ -442,22 +449,18 @@ async function buildPage_all(user) {
     }
 
     aufgabe_bearbeiten_mitarbeiter_select.value = information.aufgabe.verantwortlicher;
+
+    breadcrum_projekt.href = "/projekt?id=" + information.projekt.id;
+    breadcrum_projekt.getElementsByTagName("div")[0].innerText = information.projekt.titel;
+    breadcrum_aufgabe.innerText = information.aufgabe.titel;
 }
 
 async function buildPage_admin(user) {
-    staff_breadcrum_container.style.display = "none";
-
-    admin_breadcrum_projekt.href = "/projekt?id=" + information.projekt.id;
-    admin_breadcrum_projekt.getElementsByTagName("div")[0].innerText = information.projekt.titel;
-    admin_breadcrum_aufgabe.innerText = information.aufgabe.titel;
+    breadcrum_home_text.innerText = "Meine Projektübersicht";
 }
 
 async function buildPage_staff(user) {
-    admin_breadcrum_container.style.display = "none";
-
-    staff_breadcrum_projekt.href = "/projekt?id=" + information.projekt.id;
-    staff_breadcrum_projekt.getElementsByTagName("div")[0].innerText = information.projekt.titel;
-    staff_breadcrum_aufgabe.innerText = information.aufgabe.titel;
+    breadcrum_home_text.innerText = "Meine Aufgabenübersicht";
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {

@@ -7,11 +7,14 @@ const projektinfos_auftraggeber = document.getElementById("projektinfos_auftragg
 const projektinfos_auftragssumme = document.getElementById("projektinfos_auftragssumme");
 const projektinfos_deadline = document.getElementById("projektinfos_deadline");
 const projektinfos_voraussichtliche_fertigstellung = document.getElementById("projektinfos_voraussichtliche_fertigstellung");
+const projektinfos_beschreibung = document.getElementById("projektinfos_beschreibung");
 
 const breadcrum_projekt = document.getElementById("breadcrum_projekt");
 const breadcrum_home_text = document.getElementById("breadcrum_home_text");
 
 const aufgaben_counter = document.getElementById("aufgaben_counter");
+
+const days_left_text = document.getElementById("days_left_text");
 
 const projekt_bearbeiten_button = document.getElementById("projekt_bearbeiten_button");
 const projekt_bearbeiten_overlay = document.getElementById("projekt_bearbeiten_overlay");
@@ -19,6 +22,7 @@ const projekt_bearbeiten_projektname_input = document.getElementById("projekt_be
 const projekt_bearbeiten_auftraggeber_input = document.getElementById("projekt_bearbeiten_auftraggeber_input");
 const projekt_bearbeiten_deadline_input = document.getElementById("projekt_bearbeiten_deadline_input");
 const projekt_bearbeiten_cancel_button = document.getElementById("projekt_bearbeiten_cancel_button");
+const projekt_bearbeiten_beschreibung_input = document.getElementById("projekt_bearbeiten_beschreibung_input");
 var projekt_bearbeiten_submit_button = document.getElementById("projekt_bearbeiten_submit_button");
 
 const aufgabe_erstellen_button = document.getElementById("aufgabe_erstellen_button");
@@ -32,6 +36,7 @@ var aufgabe_erstellen_submit_button = document.getElementById("aufgabe_erstellen
 const file_upload_overlay = document.getElementById("file_upload_overlay");
 const file_upload_button = document.getElementById("file_upload_button");
 const file_upload_input_field = document.getElementById("file_upload_input_field");
+const file_upload_cancel_button = document.getElementById("file_upload_cancel_button");
 var file_upload_submit_button = document.getElementById("file_upload_submit_button");
 
 file_upload_input_field.type = "file";
@@ -55,11 +60,15 @@ aufgabe_erstellen_overlay.style.display = "none";
 
 aufgabe_erstellen_cancel_button.addEventListener("click", () => {
     aufgabe_erstellen_overlay.style.display = "none";
-})
+});
+
+file_upload_cancel_button.addEventListener("click", () => {
+    file_upload_overlay.style.display = "none";
+});
 
 aufgabe_erstellen_button.addEventListener("click", () => {
     aufgabe_erstellen_overlay.style.display = "block";
-})
+});
 
 projekt_bearbeiten_cancel_button.addEventListener("click", () => {
     projekt_bearbeiten_overlay.style.display = "none";
@@ -88,6 +97,19 @@ aufgabe_erstellen_submit_button.addEventListener("click", function(event) {
     event.preventDefault();
     createAufgabe();
 });
+
+function get_tage_differenz(von, bis) {
+    if (von == "-" || bis == "-" || bis == null) {
+        return "-";
+    }
+
+    var date1 = new Date(von);
+    var date2 = new Date(bis);
+
+    var millis = date2 - date1;
+
+    return millis / (1000 * 60 * 60 * 24);
+}
 
 function uploadFile() {
     file_upload_submit_button.value = "Bitte warten...";
@@ -158,13 +180,15 @@ function changeProjekt() {
     const new_projektname = projekt_bearbeiten_projektname_input.value;
     const new_auftraggeber = projekt_bearbeiten_auftraggeber_input.value;
     const new_deadline = projekt_bearbeiten_deadline_input.value;
+    const new_beschreibung = projekt_bearbeiten_beschreibung_input.value;
 
     const docRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
 
     docRef.update({
         titel: new_projektname,
         auftraggeber: new_auftraggeber,
-        deadline: new_deadline
+        deadline: new_deadline,
+        beschreibung: new_beschreibung
     })
     .then(() => {
         console.log("Projekt bearbeitet");
@@ -256,6 +280,49 @@ function downloadFile(filePath) {
     });
 }
 
+function deleteFile(file_id) {
+    for (const datei_id in information.dateien) {
+        if (information.dateien[datei_id].file_id !== file_id) {
+            continue
+        }
+
+        const documentRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+
+        documentRef.update({
+            dateien: firebase.firestore.FieldValue.arrayRemove(datei_id)
+        })
+        .then(() => {
+            console.log("Datei aus Array gelöscht");
+            console.log("Datei ID", datei_id)
+            const dateiDocumentRef = db.collection("companies").doc(information.company.id).collection("dateien").doc(datei_id);
+
+            console.log(dateiDocumentRef);
+
+            dateiDocumentRef.delete()
+            .then(() => {
+                console.log("Dokument aus Collection gelöscht:", datei_id);
+
+                const fileRef = storage.ref().child(file_id);
+
+                fileRef.delete()
+                .then(() => {
+                    console.log("Datei aus Storage gelöscht:", file_id);
+                    location.reload();
+                })
+                .catch((error) => {
+                    console.error("Fehler beim Löschen der Datei aus Storage:", error);
+                });
+            })
+            .catch((error) => {
+                console.error("Fehler beim Löschen des Dokuments aus der Collection:", error);
+            });
+        })
+        .catch((error) => {
+            console.error("Fehler beim Löschen der Datei aus dem Array:", error);
+        });
+    }
+}
+
 function get_projektdokument_table_row(file_id, titel) {
     const table_row_div = document.createElement("div");
     table_row_div.classList.add("data-table-row-2", "doc");
@@ -267,6 +334,17 @@ function get_projektdokument_table_row(file_id, titel) {
     projektdokument_a.setAttribute("onClick", "javascript: downloadFile('" + file_id + "');")
 
     table_row_div.appendChild(projektdokument_a);
+
+    const aufgabenergebnis_close_icon_wrapper_div = document.createElement("div");
+    aufgabenergebnis_close_icon_wrapper_div.classList.add("close-icon-wrapper", "dateien");
+    const close_icon_first = document.createElement("div");
+    close_icon_first.classList.add("close-icon-line-3", "first");
+    const close_icon_second = document.createElement("div");
+    close_icon_second.classList.add("close-icon-line-3", "second");
+    aufgabenergebnis_close_icon_wrapper_div.appendChild(close_icon_first);
+    aufgabenergebnis_close_icon_wrapper_div.appendChild(close_icon_second);
+    aufgabenergebnis_close_icon_wrapper_div.setAttribute("onClick", "javascript: deleteFile('" + file_id + "')");
+    table_row_div.appendChild(aufgabenergebnis_close_icon_wrapper_div);
 
     return table_row_div;
 }
@@ -394,10 +472,13 @@ async function buildPage_all(user) {
 
     heading.innerText = information["projekt"]["titel"];
 
-    projektinfos_auftraggeber.innerText = information["projekt"]["auftraggeber"];
+    days_left_text.innerText = get_tage_differenz(get_today_string(), information.aufgabe.prognostiziertes_abschlussdatum);
+
+    projektinfos_auftraggeber.innerText = information.projekt.auftraggeber;
     projektinfos_auftragssumme.innerText = formatEuro(information["projekt"]["dealvolumen"]);
     projektinfos_deadline.innerText = datestring_to_visual_date(information["projekt"]["deadline"]);
     projektinfos_voraussichtliche_fertigstellung.innerText = get_voraussichtliche_fertigstellung_string();
+    projektinfos_beschreibung.innerText = information.projekt.beschreibung;
 
     for (datei_id in information.dateien) {
         const projektdatei_table_row = get_projektdokument_table_row(
@@ -434,6 +515,7 @@ async function buildPage_all(user) {
     projekt_bearbeiten_projektname_input.value = information.projekt.titel;
     projekt_bearbeiten_auftraggeber_input.value = information.projekt.auftraggeber;
     projekt_bearbeiten_deadline_input.value = information.projekt.deadline;
+    projekt_bearbeiten_beschreibung_input.value = information.projekt.beschreibung;
     
     for (mitarbeiter_id in information.mitarbeiter) {
         const mitarbeiter_option = document.createElement("option");
