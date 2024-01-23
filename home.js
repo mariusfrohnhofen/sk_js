@@ -183,7 +183,7 @@ function get_fertigstellung_datum(projekt_id) {
     return highest
 }
 
-get_projekt_id_from_aufgaben_id(aufgaben_id) {
+function get_projekt_id_from_aufgaben_id(aufgaben_id) {
     var found_projekt_id = null;
 
     for (projekt_id in information.projekte) {
