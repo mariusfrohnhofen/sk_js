@@ -310,8 +310,8 @@ async function buildPage_staff(user) {
                 information.aufgaben[aufgabe_id].titel,
                 "Offen",
                 "green",
-                "NAME ZUM PROJEKT",
-                "-"
+                information.projekte[get_projekt_id_from_aufgaben_id(aufgabe_id)].titel,
+                datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
             )
 
             document.getElementById("handlungsbedarf_rows_div").appendChild(aufgabe_table_row);
