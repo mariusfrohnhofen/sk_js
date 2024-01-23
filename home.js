@@ -338,7 +338,7 @@ async function buildPage_staff(user) {
             continue
         }
 
-        const status = get_aufgabe_status(aufgaben_id);
+        const status = get_aufgabe_status(aufgabe_id);
 
         if (information.aufgaben[aufgabe_id]["prognostiziertes_abschlussdatum"] == null) {
             handlungsbedarf_tables.style.display = "block";
