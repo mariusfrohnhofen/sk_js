@@ -44,7 +44,7 @@ function uploadFile() {
 }
 
 function datestring_to_visual_date(datestring) {
-    if (datestring == null) {
+    if (datestring == null || datestring == "-") {
         return "-";
     }
 
@@ -84,7 +84,7 @@ function get_today_string() {
     return jahr + '-' + monat + '-' + tag;
 }
 
-function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_abgeschlossen, aufgaben_gesamt, auftraggeber, prognostizierte_fertigstellung, deadline, dealvolumen) {
+function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_abgeschlossen, aufgaben_gesamt, auftraggeber, prognostizierte_fertigstellung, tage_bis_deadline, deadline, dealvolumen) {
     const data_table_row = document.createElement("div");
     data_table_row.classList.add("data-table-row");
 
@@ -115,7 +115,7 @@ function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_ab
 
     const tage_bis_deadline_div = document.createElement("div");
     tage_bis_deadline_div.classList.add("text-100", "medium");
-    tage_bis_deadline_div.innerText = get_tage_differenz(get_today_string(), deadline);
+    tage_bis_deadline_div.innerText = tage_bis_deadline;
     data_table_row.appendChild(tage_bis_deadline_div);
 
     const deadline_div = document.createElement("div");
@@ -233,6 +233,52 @@ function get_aufgabe_status(aufgaben_id) {
     }
 }
 
+function get_projekt_status(projekt_id) {
+    var condition_found = false;
+    var status = null;
+
+    information.projekte[projekt_id].aufgaben.forEach((aufgaben_id) => {
+        if (condition_found) {
+            return
+        }
+
+        if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
+            status = {
+                label: "Handlungsbedarf",
+                color: "red"
+            }
+            condition_found = true;
+            return
+        }
+
+        if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
+            status = {
+                label: "Handlungsbedarf",
+                color: "red"
+            }
+            condition_found = true;
+            return
+        }
+    });
+
+    if (get_today_string() > information.projekte[projekt_id].deadline) {
+        status = {
+            label: "Überzogen",
+            color: "red"
+        }
+        condition_found = true;
+    }
+
+    if (condition_found) {
+        return status;
+    }
+
+    return {
+        label: "Offen",
+        color: "orange"
+    }
+}
+
 async function getInformation(user) {
     const usermatching_info = await db.collection("usermatching").doc("WJobxOFznceM4Cw1hRZd").get();
 
@@ -309,16 +355,19 @@ async function buildPage_admin(user) {
                 aufgaben_abgeschlossen++;
             }
         });
+
+        const status = get_projekt_status(projekt_id);
         
         const data_table_row = get_data_table_row(
             projekt_id,
             information["projekte"][projekt_id]["titel"],
-            "Offen",
-            "green",
+            status.label,
+            status.color,
             aufgaben_abgeschlossen,
             information["projekte"][projekt_id]["aufgaben"].length,
             information["projekte"][projekt_id]["auftraggeber"],
-            get_fertigstellung_datum(projekt_id),
+            datestring_to_visual_date(get_fertigstellung_datum(projekt_id)),
+            get_tage_differenz(get_today_string(), information.projekte[projekt_id].deadline),
             datestring_to_visual_date(information.projekte[projekt_id].deadline),
             formatEuro(information["projekte"][projekt_id]["dealvolumen"])
         );

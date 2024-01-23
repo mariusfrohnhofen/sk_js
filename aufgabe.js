@@ -34,6 +34,8 @@ const aufgabe_reminder_container = document.getElementById("aufgabe_reminder_con
 const aufgabe_reminder_speichern_button = document.getElementById("aufgabe_reminder_speichern_button");
 const aufgabe_reminder_input_field = document.getElementById("aufgabe_reminder_input_field");
 
+const status_badge = document.getElementById("status_badge");
+
 const days_left_text = document.getElementById("days_left_text");
 
 const currentPath = window.location.pathname;
@@ -141,6 +143,34 @@ function aufgabe_fertigstellen() {
     });
 }
 
+function get_aufgabe_status() {
+    if (information.aufgabe.finished) {
+        return {
+            label: "Abgeschlossen",
+            color: "green"
+        }
+    }
+
+    if (information.aufgabe.prognostiziertes_abschlussdatum == null) {
+        return {
+            label: "Handlungsbedarf",
+            color: "red"
+        }
+    }
+
+    if (get_today_string() > information.aufgabe.prognostiziertes_abschlussdatum) {
+        return {
+            label: "Überzogen",
+            color: "red"
+        }
+    }
+
+    return {
+        label: "Offen",
+        color: "orange"
+    }
+}
+
 function put_aufgabendate_to_db(aufgabendate) {
     const documentRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
 
@@ -162,6 +192,10 @@ function changeAufgabe() {
     const new_zustaendiger = aufgabe_bearbeiten_mitarbeiter_select.value;
     const new_aufgabeninhalt = aufgabe_bearbeiten_aufgabeninhalt_input.value;
     const new_voraussichtliche_fertigstellung = aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.value;
+
+    if (new_voraussichtliche_fertigstellung == "") {
+        new_voraussichtliche_fertigstellung = null;
+    }
 
     const docRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
 
@@ -474,6 +508,11 @@ async function buildPage_all(user) {
     breadcrum_projekt.href = "/projekt?id=" + information.projekt.id;
     breadcrum_projekt.getElementsByTagName("div")[0].innerText = information.projekt.titel;
     breadcrum_aufgabe.innerText = information.aufgabe.titel;
+
+    const status = get_aufgabe_status();
+
+    status_badge.classList.add(status.color);
+    status_badge.innerText = status.label;
 }
 
 async function buildPage_admin(user) {
@@ -482,6 +521,13 @@ async function buildPage_admin(user) {
 
 async function buildPage_staff(user) {
     breadcrum_home_text.innerText = "Meine Aufgabenübersicht";
+
+    if (information.aufgabe.verantwortlicher != information.user.id) {
+        aufgabe_bearbeiten_button.remove();
+        aufgabe_bearbeiten_overlay.remove();
+        aufgabe_fertigstellen_button.remove();
+        aufgabe_reminder_container.remove();
+    }
 }
 
 function remove_overlay() {

@@ -50,7 +50,7 @@ function createProject() {
         dateien: [],
         deadline: deadline,
         dealvolumen: auftragssumme,
-        id: newDocumentRef,
+        id: newDocumentRef.id,
         titel: projektname,
         verantwortlicher: information.user.id
     }

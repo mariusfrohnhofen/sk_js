@@ -42,6 +42,8 @@ var file_upload_submit_button = document.getElementById("file_upload_submit_butt
 
 const aufgaben_progress_bar = document.getElementById("aufgaben_progress_bar");
 
+const status_badge = document.getElementById("status_badge");
+
 file_upload_input_field.type = "file";
 file_upload_overlay.style.display = "none";
 file_upload_button.addEventListener("click", () => {
@@ -263,6 +265,37 @@ function formatEuro(number) {
     return formattedEuro;
 }
 
+function get_projekt_status() {
+
+    for (aufgaben_id in information.aufgaben) {
+        if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
+            return {
+                label: "Handlungsbedarf",
+                color: "red"
+            }
+        }
+
+        if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
+            return {
+                label: "Handlungsbedarf",
+                color: "red"
+            }
+        }
+    }
+
+    if (get_today_string() > information.projekt.deadline) {
+        return {
+            label: "Überzogen",
+            color: "red"
+        }
+    }
+
+    return {
+        label: "Offen",
+        color: "orange"
+    }
+}
+
 function datestring_to_visual_date(datestring) {
     if (datestring == null) {
         return "-";
@@ -459,13 +492,18 @@ function get_voraussichtliche_fertigstellung_string() {
             continue
         }
 
+        if (information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum == null) {
+            highest_datum = null;
+            continue
+        }
+
         if (information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum > highest_datum) {
             highest_datum = information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum;
         }
     }
 
-    if (highest_datum == "1970-01-01") {
-        return "Alle Aufgaben abgeschlossen";
+    if (highest_datum == "1970-01-01" || highest_datum == null) {
+        return "-";
     }
 
     return datestring_to_visual_date(highest_datum)
@@ -545,7 +583,12 @@ async function buildPage_all(user) {
 
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
 
-    aufgaben_progress_bar.style.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";
+    if (information.projekt.aufgaben.length == 0) {
+        aufgaben_progress_bar.style.width = "0%";
+    }
+    else {
+        aufgaben_progress_bar.style.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";
+    }
 
     breadcrum_projekt.innerText = information.projekt.titel;
 
@@ -561,6 +604,11 @@ async function buildPage_all(user) {
         mitarbeiter_option.innerText = information.mitarbeiter[mitarbeiter_id].vorname + " " + information.mitarbeiter[mitarbeiter_id].nachname;
         aufgabe_erstellen_mitarbeiter_select.appendChild(mitarbeiter_option);
     }
+
+    const status = get_projekt_status();
+
+    status_badge.classList.add(status.color);
+    status_badge.innerText = status.label;
 }
 
 async function buildPage_admin(user) {
