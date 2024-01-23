@@ -134,6 +134,7 @@ function aufgabe_fertigstellen() {
     })
     .then(() => {
         console.log("Aufgabe erfolgreich abgeschlossen");
+        location.reload();
     })
     .catch((error) => {
         console.error("Fehler beim abschließen der Aufgabe:", error);
