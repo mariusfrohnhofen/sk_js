@@ -76,6 +76,14 @@ function get_tage_differenz(von, bis) {
     return millis / (1000 * 60 * 60 * 24);
 }
 
+function get_today_string() {
+    var heute = new Date();
+    var jahr = heute.getFullYear();
+    var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
+    var tag = ('0' + heute.getDate()).slice(-2);
+    return jahr + '-' + monat + '-' + tag;
+}
+
 function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_abgeschlossen, aufgaben_gesamt, auftraggeber, prognostizierte_fertigstellung, deadline, dealvolumen) {
     const data_table_row = document.createElement("div");
     data_table_row.classList.add("data-table-row");
