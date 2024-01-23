@@ -156,7 +156,7 @@ function get_aufgabe_table_row(aufgabe_id, titel, status, status_color, projektn
 
     const prognostizierte_fertigstellung_div = document.createElement("div");
     prognostizierte_fertigstellung_div.classList.add("text-100", "medium");
-    prognostizierte_fertigstellung_div.innerText = datestring_to_visual_date(prognostizierte_fertigstellung);
+    prognostizierte_fertigstellung_div.innerText = prognostizierte_fertigstellung;
     data_table_row.appendChild(prognostizierte_fertigstellung_div);
 
     data_table_row.addEventListener("click", (event) => {
@@ -203,6 +203,34 @@ function get_projekt_id_from_aufgaben_id(aufgaben_id) {
     }
 
     return found_projekt_id
+}
+
+function get_aufgabe_status(aufgaben_id) {
+    if (information.aufgaben[aufgaben_id].finished) {
+        return {
+            label: "Abgeschlossen",
+            color: "green"
+        }
+    }
+
+    if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
+        return {
+            label: "Handlungsbedarf",
+            color: "red"
+        }
+    }
+
+    if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
+        return {
+            label: "Überzogen",
+            color: "red"
+        }
+    }
+
+    return {
+        label: "Offen",
+        color: "orange"
+    }
 }
 
 async function getInformation(user) {
@@ -310,14 +338,16 @@ async function buildPage_staff(user) {
             continue
         }
 
+        const status = get_aufgabe_status(aufgaben_id);
+
         if (information.aufgaben[aufgabe_id]["prognostiziertes_abschlussdatum"] == null) {
             handlungsbedarf_tables.style.display = "block";
 
             const aufgabe_table_row = get_aufgabe_table_row(
                 aufgabe_id,
                 information.aufgaben[aufgabe_id].titel,
-                "Offen",
-                "green",
+                status.label,
+                status.color,
                 information.projekte[get_projekt_id_from_aufgaben_id(aufgabe_id)].titel,
                 datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
             )
@@ -328,8 +358,8 @@ async function buildPage_staff(user) {
             const aufgabe_table_row = get_aufgabe_table_row(
                 aufgabe_id,
                 information.aufgaben[aufgabe_id].titel,
-                "Offen",
-                "green",
+                status.label,
+                status.color,
                 information.projekte[get_projekt_id_from_aufgaben_id(aufgabe_id)].titel,
                 datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
             )

@@ -471,6 +471,34 @@ function get_voraussichtliche_fertigstellung_string() {
     return datestring_to_visual_date(highest_datum)
 }
 
+function get_aufgabe_status(aufgaben_id) {
+    if (information.aufgaben[aufgaben_id].finished) {
+        return {
+            label: "Abgeschlossen",
+            color: "green"
+        }
+    }
+
+    if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
+        return {
+            label: "Handlungsbedarf",
+            color: "red"
+        }
+    }
+
+    if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
+        return {
+            label: "Überzogen",
+            color: "red"
+        }
+    }
+
+    return {
+        label: "Offen",
+        color: "orange"
+    }
+}
+
 async function buildPage_all(user) {
     dropdown_company_name.innerText = information["company"]["name"];
     dropdown_user_name.innerText = information["user"]["vorname"] + " " + information["user"]["nachname"];
@@ -501,11 +529,13 @@ async function buildPage_all(user) {
             aufgaben_abgeschlossen++;
         }
 
+        const status = get_aufgabe_status(aufgaben_id);
+
         const aufgabe_table_row = get_aufgaben_table_row(
             aufgaben_id,
             information.aufgaben[aufgaben_id].titel,
-            "Offen",
-            "green",
+            status.label,
+            status.color,
             information.aufgaben[aufgaben_id].verantwortlicher,
             datestring_to_visual_date(information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum)
         );
@@ -515,7 +545,7 @@ async function buildPage_all(user) {
 
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
 
-    aufgaben_progress_bar.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";
+    aufgaben_progress_bar.style.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";
 
     breadcrum_projekt.innerText = information.projekt.titel;
 
