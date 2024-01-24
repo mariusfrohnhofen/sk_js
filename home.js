@@ -413,7 +413,7 @@ async function buildPage_staff(user) {
         const status = get_aufgabe_status(aufgabe_id);
 
         if (information.aufgaben[aufgabe_id]["prognostiziertes_abschlussdatum"] == null) {
-            handlungsbedarf_tables.style.display = "block";
+            // handlungsbedarf_tables.style.display = "block";
 
             const aufgabe_table_row = get_aufgabe_table_row(
                 aufgabe_id,
@@ -424,7 +424,7 @@ async function buildPage_staff(user) {
                 datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
             )
 
-            document.getElementById("handlungsbedarf_rows_div").appendChild(aufgabe_table_row);
+            document.getElementById("aufgaben_rows_div").appendChild(aufgabe_table_row);
         }
         else {
             const aufgabe_table_row = get_aufgabe_table_row(
