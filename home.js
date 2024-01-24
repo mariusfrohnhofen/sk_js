@@ -1,4 +1,4 @@
-// v1.0.16
+// v1.0.17
 
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
