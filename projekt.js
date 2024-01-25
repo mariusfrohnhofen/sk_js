@@ -664,6 +664,7 @@ async function buildPage_staff(user) {
     projekt_bearbeiten_overlay.remove();
     file_upload_button.remove();
     file_upload_overlay.remove();
+    projekt_fertigstellen_button.remove();
 }
 
 function remove_overlay() {

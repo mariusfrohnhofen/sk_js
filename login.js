@@ -4,18 +4,13 @@
 const signInButton = document.getElementById('sign_in_button');
 const emailInputField = document.getElementById('email_input_field');
 const passInputField = document.getElementById('password_input_field');
-const loginForm = document.getElementById('login_form');
 
 const currentPath = window.location.pathname;
 
-loginForm.style.display = "none";
 
 const auth = firebase.auth().onAuthStateChanged((user) => {
     if (user) {
         location.href = "/home";
-    }
-    else {
-        loginForm.style.display = "block";
     }
 });
 

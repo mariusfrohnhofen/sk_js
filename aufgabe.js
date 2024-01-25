@@ -193,7 +193,7 @@ function changeAufgabe() {
     const new_aufgabenname = aufgabe_bearbeiten_aufgabenname_input.value;
     const new_zustaendiger = aufgabe_bearbeiten_mitarbeiter_select.value;
     const new_aufgabeninhalt = aufgabe_bearbeiten_aufgabeninhalt_input.value;
-    const new_voraussichtliche_fertigstellung = aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.value;
+    var new_voraussichtliche_fertigstellung = aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.value;
 
     if (new_voraussichtliche_fertigstellung == "") {
         new_voraussichtliche_fertigstellung = null;
