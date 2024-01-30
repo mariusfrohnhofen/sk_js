@@ -9,12 +9,12 @@ const staff_data_table = document.getElementById("staff_data_table");
 
 const alle_projekte_tables = document.getElementById("alle_projekte_tables");
 const alle_aufgaben_tables = document.getElementById("alle_aufgaben_tables");
-const handlungsbedarf_tables = document.getElementById("handlungsbedarf_tables");
 
-// Tabellen ausblenden
-alle_projekte_tables.style.display = "none";
-alle_aufgaben_tables.style.display = "none";
-handlungsbedarf_tables.style.display = "none";
+const heading = document.getElementById("heading");
+const create_new_project_button = document.getElementById("create_new_project_button");
+
+const projects_section_container = document.getElementById("projects_section_container");
+const aufgaben_section_container = document.getElementById("aufgaben_section_container");
 
 const currentPath = window.location.pathname;
 
@@ -25,6 +25,68 @@ var information = {
     "aufgaben": {},
     "mitarbeiter": {}
 };
+
+function create_div(klassen=[], inner_text="", styles={}) {
+    const new_div = document.createElement("div");
+    
+    klassen.forEach((klasse) => {
+        new_div.classList.add(klasse);
+    });
+
+    new_div.innerText = inner_text;
+
+    for (s in styles) {
+        new_div.style[s] = styles[s];
+    }
+
+    return new_div
+}
+
+function create_aufgabe_table_row(aufgabe_id, status) {
+    const projekt_id = get_projekt_id_from_aufgaben_id(aufgabe_id);
+
+    const aufgabe_table_data_row = document.createElement("div");
+    aufgabe_table_data_row.classList.add("aufgabe-table-data-row");
+
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "bold"], inner_text=information.aufgaben[aufgabe_id].titel, {justifySelf: "start"}));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["badge", status.color], inner_text=status.label));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=information.projekte[projekt_id].titel, {justifySelf: "start"}));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)));
+
+    aufgabe_table_data_row.addEventListener("click", (event) => {
+        location.href = "/aufgabe?id=" + aufgabe_id;
+    });
+
+    return aufgabe_table_data_row
+}
+
+function create_projekt_table_row(projekt_id, status) {
+    const projekt_table_data_row = document.createElement("projekt-table-data-row");
+    projekt_table_data_row.classList.add("projekt-table-data-row");
+
+
+    var aufgaben_abgeschlossen = 0;
+
+    information["projekte"][projekt_id]["aufgaben"].forEach((aufgaben_id) => { 
+        if (information["aufgaben"][aufgaben_id]["finished"]) {
+            aufgaben_abgeschlossen++;
+        }
+    });
+
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "bold"], inner_text=information.projekte[projekt_id].titel, {justifySelf: "start"}));
+    projekt_table_data_row.appendChild(create_div(klassen=["badge", status.color], inner_text=status.label));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=`${aufgaben_abgeschlossen}/${information['projekte'][projekt_id]['aufgaben'].length}`));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=information.projekte[projekt_id].auftraggeber, {justifySelf: "start"}));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(get_fertigstellung_datum(projekt_id))));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=`${get_tage_differenz(get_today_string(), information.projekte[projekt_id].deadline)} Tage`));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=formatEuro(information.projekte[projekt_id].dealvolumen)));
+
+    projekt_table_data_row.addEventListener("click", (event) => {
+        location.href = "/projekt?id=" + projekt_id;
+    });
+    
+    return projekt_table_data_row
+}
 
 function uploadFile() {
     const fileInput = document.getElementById('fileInput');
@@ -84,88 +146,6 @@ function get_today_string() {
     var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
     var tag = ('0' + heute.getDate()).slice(-2);
     return jahr + '-' + monat + '-' + tag;
-}
-
-function get_data_table_row(projekt_id, titel, status, status_color, aufgaben_abgeschlossen, aufgaben_gesamt, auftraggeber, prognostizierte_fertigstellung, tage_bis_deadline, deadline, dealvolumen) {
-    const data_table_row = document.createElement("div");
-    data_table_row.classList.add("data-table-row");
-
-    const titel_div = document.createElement("div");
-    titel_div.classList.add("text-100", "bold", "color-neutral-800");
-    titel_div.innerText = titel;
-    data_table_row.appendChild(titel_div);
-
-    const status_div = document.createElement("div");
-    status_div.classList.add("color-badge", status_color);
-    status_div.innerText = status;
-    data_table_row.appendChild(status_div);
-
-    const aufgaben_div = document.createElement("div");
-    aufgaben_div.classList.add("text-100", "medium");
-    aufgaben_div.innerText = aufgaben_abgeschlossen + " / " + aufgaben_gesamt;
-    data_table_row.appendChild(aufgaben_div);
-
-    const auftraggeber_div = document.createElement("div");
-    auftraggeber_div.classList.add("text-100", "medium");
-    auftraggeber_div.innerText = auftraggeber;
-    data_table_row.appendChild(auftraggeber_div);
-
-    const prognostizierte_fertigstellung_div = document.createElement("div");
-    prognostizierte_fertigstellung_div.classList.add("text-100", "medium");
-    prognostizierte_fertigstellung_div.innerText = prognostizierte_fertigstellung;
-    data_table_row.appendChild(prognostizierte_fertigstellung_div);
-
-    const tage_bis_deadline_div = document.createElement("div");
-    tage_bis_deadline_div.classList.add("text-100", "medium");
-    tage_bis_deadline_div.innerText = tage_bis_deadline;
-    data_table_row.appendChild(tage_bis_deadline_div);
-
-    const deadline_div = document.createElement("div");
-    deadline_div.classList.add("text-100", "medium");
-    deadline_div.innerText = deadline;
-    data_table_row.appendChild(deadline_div);
-
-    const dealvolumen_div = document.createElement("div");
-    dealvolumen_div.classList.add("text-100", "medium");
-    dealvolumen_div.innerText = dealvolumen;
-    data_table_row.appendChild(dealvolumen_div);
-
-    data_table_row.addEventListener("click", (event) => {
-        location.href = "/projekt?id=" + projekt_id;
-    });
-
-    return data_table_row;
-}
-
-function get_aufgabe_table_row(aufgabe_id, titel, status, status_color, projektname, prognostizierte_fertigstellung) {
-    const data_table_row = document.createElement("div");
-    data_table_row.classList.add("data-table-row", "custom-data-table-row");
-
-    const titel_div = document.createElement("div");
-    titel_div.classList.add("text-100", "bold", "color-neutral-800");
-    titel_div.innerText = titel;
-    data_table_row.appendChild(titel_div);
-
-    const status_div = document.createElement("div");
-    status_div.classList.add("color-badge", status_color);
-    status_div.innerText = status;
-    data_table_row.appendChild(status_div);
-
-    const projekt_div = document.createElement("div");
-    projekt_div.classList.add("text-100", "medium");
-    projekt_div.innerText = projektname;
-    data_table_row.appendChild(projekt_div);
-
-    const prognostizierte_fertigstellung_div = document.createElement("div");
-    prognostizierte_fertigstellung_div.classList.add("text-100", "medium");
-    prognostizierte_fertigstellung_div.innerText = prognostizierte_fertigstellung;
-    data_table_row.appendChild(prognostizierte_fertigstellung_div);
-
-    data_table_row.addEventListener("click", (event) => {
-        location.href = "/aufgabe?id=" + aufgabe_id;
-    });
-
-    return data_table_row;
 }
 
 function get_fertigstellung_datum(projekt_id) {
@@ -365,44 +345,23 @@ async function buildPage_all(user) {
 
 async function buildPage_admin(user) {
 
-    alle_projekte_tables.style.display = "block";
-    handlungsbedarf_tables.style.display = "none";
-    alle_aufgaben_tables.style.display = "none";
+    aufgaben_section_container.remove();
+    heading.innerText = "Alle Projekte";
     
     for (projekt_id in information.projekte) {
 
-        var aufgaben_abgeschlossen = 0;
-
-        information["projekte"][projekt_id]["aufgaben"].forEach((aufgaben_id) => { 
-            if (information["aufgaben"][aufgaben_id]["finished"]) {
-                aufgaben_abgeschlossen++;
-            }
-        });
-
         const status = get_projekt_status(projekt_id);
-        
-        const data_table_row = get_data_table_row(
-            projekt_id,
-            information["projekte"][projekt_id]["titel"],
-            status.label,
-            status.color,
-            aufgaben_abgeschlossen,
-            information["projekte"][projekt_id]["aufgaben"].length,
-            information["projekte"][projekt_id]["auftraggeber"],
-            datestring_to_visual_date(get_fertigstellung_datum(projekt_id)),
-            get_tage_differenz(get_today_string(), information.projekte[projekt_id].deadline),
-            datestring_to_visual_date(information.projekte[projekt_id].deadline),
-            formatEuro(information["projekte"][projekt_id]["dealvolumen"])
-        );
+        const projekt_table_row = create_projekt_table_row(projekt_id, status);
 
-        document.getElementById("project_rows_div").appendChild(data_table_row);
+        document.getElementById("project_rows_div").appendChild(projekt_table_row);
     }
 }
 
 async function buildPage_staff(user) {
 
-    alle_projekte_tables.style.display = "none";
-    alle_aufgaben_tables.style.display = "block";
+    projects_section_container.remove();
+    create_new_project_button.remove();
+    heading.innerText = "Alle Aufgaben";
 
     for (aufgabe_id in information.aufgaben) {
 
@@ -411,33 +370,9 @@ async function buildPage_staff(user) {
         }
 
         const status = get_aufgabe_status(aufgabe_id);
+        const aufgabe_table_row = create_aufgabe_table_row(aufgabe_id, status);
 
-        if (information.aufgaben[aufgabe_id]["prognostiziertes_abschlussdatum"] == null) {
-            // handlungsbedarf_tables.style.display = "block";
-
-            const aufgabe_table_row = get_aufgabe_table_row(
-                aufgabe_id,
-                information.aufgaben[aufgabe_id].titel,
-                status.label,
-                status.color,
-                information.projekte[get_projekt_id_from_aufgaben_id(aufgabe_id)].titel,
-                datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
-            )
-
-            document.getElementById("aufgaben_rows_div").appendChild(aufgabe_table_row);
-        }
-        else {
-            const aufgabe_table_row = get_aufgabe_table_row(
-                aufgabe_id,
-                information.aufgaben[aufgabe_id].titel,
-                status.label,
-                status.color,
-                information.projekte[get_projekt_id_from_aufgaben_id(aufgabe_id)].titel,
-                datestring_to_visual_date(information.aufgaben[aufgabe_id].prognostiziertes_abschlussdatum)
-            )
-
-            document.getElementById("aufgaben_rows_div").appendChild(aufgabe_table_row);
-        }
+        document.getElementById("aufgabe_rows_div").appendChild(aufgabe_table_row);
     }
 }
 

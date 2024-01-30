@@ -1,3 +1,6 @@
+const dropdown_company_name = document.getElementById("dropdown_company_name");
+const dropdown_user_name = document.getElementById("dropdown_user_name");
+
 const mitarbeiter_vorname_input = document.getElementById("mitarbeiter_vorname_input");
 const mitarbeiter_nachname_input = document.getElementById("mitarbeiter_nachname_input");
 const mitarbeiter_abteilung_input = document.getElementById("mitarbeiter_abteilung_input");
@@ -79,6 +82,9 @@ async function getInformation(user) {
 }
 
 function buildPage_all(user) {
+    dropdown_company_name.innerText = information["company"]["name"];
+    dropdown_user_name.innerText = information["user"]["vorname"] + " " + information["user"]["nachname"];
+
     mitarbeiter_vorname_input.value = information.user.vorname;
     mitarbeiter_nachname_input.value = information.user.nachname;
     mitarbeiter_abteilung_input.value = information.user.position;

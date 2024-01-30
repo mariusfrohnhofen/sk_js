@@ -48,6 +48,9 @@ const projekt_fertigstellen_button = document.getElementById("projekt_fertigstel
 
 const status_badge = document.getElementById("status_badge");
 
+const projektdokumente_rows = document.getElementById("projektdokumente_rows");
+const aufgaben_rows = document.getElementById("aufgaben_rows");
+
 file_upload_input_field.type = "file";
 file_upload_overlay.style.display = "none";
 file_upload_button.addEventListener("click", () => {
@@ -111,6 +114,72 @@ aufgabe_erstellen_submit_button.addEventListener("click", function(event) {
     createAufgabe();
 });
 
+function create_div(klassen=[], inner_text="", styles={}) {
+    const new_div = document.createElement("div");
+    
+    klassen.forEach((klasse) => {
+        new_div.classList.add(klasse);
+    });
+
+    new_div.innerText = inner_text;
+
+    for (s in styles) {
+        new_div.style[s] = styles[s];
+    }
+
+    return new_div
+}
+
+function create_aufgabe_table_row(aufgabe_id, status) {
+
+    const aufgabe_data = information.aufgaben[aufgabe_id];
+    const verantwortlicher = information.mitarbeiter[aufgabe_data.verantwortlicher].vorname + " " + information.mitarbeiter[aufgabe_data.verantwortlicher].nachname;
+
+    const aufgabe_table_data_row = document.createElement("div");
+    aufgabe_table_data_row.classList.add("aufgabe-table-data-row");
+
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "bold"], inner_text=aufgabe_data.titel, {justifySelf: "start"}));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["badge", status.color], inner_text=status.label));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=verantwortlicher, {justifySelf: "start"}));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(aufgabe_data.prognostiziertes_abschlussdatum)));
+
+    aufgabe_table_data_row.addEventListener("click", () => {
+        location.href = "/aufgabe?id=" + aufgabe_id;
+    });
+
+    return aufgabe_table_data_row
+}
+
+function create_datei_table_row(datei_id) {
+
+    const datei_table_data_row = create_div(klassen=["datei-table-data-row"]);
+
+    const datei_data = information.dateien[datei_id];
+    const ersteller = information.mitarbeiter[datei_data.ersteller].vorname + " " + information.mitarbeiter[datei_data.ersteller].nachname;
+
+    const datei_a = document.createElement("a");
+    datei_a.classList.add("text-100", "bold");
+    datei_a.innerText = datei_data.titel;
+    datei_a.href = "#";
+    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_id + "');");
+    datei_a.style.justifySelf = "start";
+
+    datei_table_data_row.appendChild(datei_a);
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=formatFileSize(datei_data.size)));
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(datei_data.erstellungsdatum)));
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=ersteller));
+
+    const close_icon_wrapper = create_div(klassen=["close-icon-wrapper"]);
+    close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "first"]));
+    close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "second"]));
+
+    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_id + "')");
+    
+    datei_table_data_row.appendChild(close_icon_wrapper);
+
+    return datei_table_data_row
+}
+
 function get_tage_differenz(von, bis) {
     if (von == "-" || bis == "-" || bis == null) {
         return "-";
@@ -122,6 +191,16 @@ function get_tage_differenz(von, bis) {
     var millis = date2 - date1;
 
     return millis / (1000 * 60 * 60 * 24);
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0 || bytes === undefined) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(k)));
+
+    return Math.round(10 * (bytes / Math.pow(k, i))) / 10 + ' ' + sizes[i];
 }
 
 function projekt_fertigstellen() {
@@ -158,7 +237,8 @@ function uploadFile() {
                 ersteller: information.user.id,
                 erstellungsdatum: get_today_string(),
                 file_id: file_id,
-                titel: file.name
+                titel: file.name,
+                size: file.size
             }
 
             const collectionRef = db.collection("companies").doc(information.company.id).collection("dateien");
@@ -403,64 +483,6 @@ function deleteFile(file_id) {
     }
 }
 
-function get_projektdokument_table_row(file_id, titel) {
-    const table_row_div = document.createElement("div");
-    table_row_div.classList.add("data-table-row-2", "doc");
-
-    const projektdokument_a = document.createElement("a");
-    projektdokument_a.classList.add("doc-link");
-    projektdokument_a.innerText = titel;
-    projektdokument_a.href = "#";
-    projektdokument_a.setAttribute("onClick", "javascript: downloadFile('" + file_id + "');")
-
-    table_row_div.appendChild(projektdokument_a);
-
-    const aufgabenergebnis_close_icon_wrapper_div = document.createElement("div");
-    aufgabenergebnis_close_icon_wrapper_div.classList.add("close-icon-wrapper", "dateien");
-    const close_icon_first = document.createElement("div");
-    close_icon_first.classList.add("close-icon-line-3", "first");
-    const close_icon_second = document.createElement("div");
-    close_icon_second.classList.add("close-icon-line-3", "second");
-    aufgabenergebnis_close_icon_wrapper_div.appendChild(close_icon_first);
-    aufgabenergebnis_close_icon_wrapper_div.appendChild(close_icon_second);
-    aufgabenergebnis_close_icon_wrapper_div.setAttribute("onClick", "javascript: deleteFile('" + file_id + "')");
-    table_row_div.appendChild(aufgabenergebnis_close_icon_wrapper_div);
-
-    return table_row_div;
-}
-
-function get_aufgaben_table_row(aufgabe_id, aufgabe_name, status, status_color, mitarbeiter_id, voraussichtliche_fertigstellung) {
-    const aufgabe_table_row = document.createElement("div");
-    aufgabe_table_row.classList.add("data-table-row-2");
-
-    const aufgabe_name_div = document.createElement("div");
-    aufgabe_name_div.classList.add("text-606", "bold", "color-neutral-800");
-    aufgabe_name_div.innerText = aufgabe_name;
-    aufgabe_table_row.appendChild(aufgabe_name_div);
-
-    const aufgabe_status_div = document.createElement("div");
-    aufgabe_status_div.classList.add("color-badge", status_color);
-    aufgabe_status_div.innerText = status;
-    aufgabe_table_row.appendChild(aufgabe_status_div);
-    
-    const aufgabe_mitarbeiter_div = document.createElement("div");
-    aufgabe_mitarbeiter_div.classList.add("text-606", "medium");
-    aufgabe_mitarbeiter_div.innerText = information.mitarbeiter[mitarbeiter_id].vorname + " " + information.mitarbeiter[mitarbeiter_id].nachname;
-    aufgabe_table_row.appendChild(aufgabe_mitarbeiter_div);
-    
-    const aufgabe_voraussichtlicher_abschluss_div = document.createElement("div");
-    aufgabe_voraussichtlicher_abschluss_div.classList.add("text-606", "medium");
-    aufgabe_voraussichtlicher_abschluss_div.innerText = voraussichtliche_fertigstellung;
-    aufgabe_table_row.appendChild(aufgabe_voraussichtlicher_abschluss_div);
-
-    aufgabe_table_row.addEventListener("click", (event) => {
-        location.href = "/aufgabe?id=" + aufgabe_id;
-    });
-
-    return aufgabe_table_row;
-    
-}
-
 async function getInformation(user) {
     const usermatching_info = await db.collection("usermatching").doc("WJobxOFznceM4Cw1hRZd").get();
 
@@ -594,33 +616,18 @@ async function buildPage_all(user) {
     projektinfos_beschreibung.innerText = information.projekt.beschreibung;
 
     for (datei_id in information.dateien) {
-        const projektdatei_table_row = get_projektdokument_table_row(
-            information.dateien[datei_id].file_id,
-            information.dateien[datei_id].titel
-        )
-
-        document.getElementById("projektdokumente_rows").appendChild(projektdatei_table_row);
+        projektdokumente_rows.appendChild(create_datei_table_row(datei_id));
     }
 
     var aufgaben_abgeschlossen = 0;
 
-    for (aufgaben_id in information.aufgaben) {
-        if (information.aufgaben[aufgaben_id].finished) {
+    for (aufgabe_id in information.aufgaben) {
+        if (information.aufgaben[aufgabe_id].finished) {
             aufgaben_abgeschlossen++;
         }
 
-        const status = get_aufgabe_status(aufgaben_id);
-
-        const aufgabe_table_row = get_aufgaben_table_row(
-            aufgaben_id,
-            information.aufgaben[aufgaben_id].titel,
-            status.label,
-            status.color,
-            information.aufgaben[aufgaben_id].verantwortlicher,
-            datestring_to_visual_date(information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum)
-        );
-
-        document.getElementById("aufgaben_rows").appendChild(aufgabe_table_row);
+        const status = get_aufgabe_status(aufgabe_id);
+        aufgaben_rows.appendChild(create_aufgabe_table_row(aufgabe_id, status));
     }
 
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
