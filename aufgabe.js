@@ -118,6 +118,10 @@ aufgabe_bearbeiten_submit_button.addEventListener("click", function(event) {
     changeAufgabe();
 });
 
+aufgabe_loeschen_submit_button.addEventListener("click", () => {
+    delete_aufgabe();
+});
+
 aufgabe_reminder_speichern_button.addEventListener("click", function(event) {
     const eingabe_datum = aufgabe_reminder_input_field.value;
 
