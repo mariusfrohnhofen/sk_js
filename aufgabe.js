@@ -255,7 +255,7 @@ function changeAufgabe() {
 }
 
 function uploadFile() {
-    file_upload_submit_button.value = "Bitte warten...";
+    file_upload_submit_button.innerText = "Bitte warten...";
     file_upload_submit_button.disabled = true;
     const file = file_upload_input_field.files[0];
 
@@ -273,7 +273,8 @@ function uploadFile() {
                 ersteller: information.user.id,
                 erstellungsdatum: get_today_string(),
                 file_id: file_id,
-                titel: file.name
+                titel: file.name,
+                size: file.size
             }
 
             const collectionRef = db.collection("companies").doc(information.company.id).collection("dateien");
@@ -464,7 +465,8 @@ async function buildPage_all(user) {
 
     if (information.aufgabe.dateien.length === 0) {
         set_card_to_message("aufgabenergebnisse_card", "Es wurde noch keine Datei hinzugefügt");
-
+    }
+    else {
         aufgabe_loeschen_info.innerText = "Bitte löschen Sie zuerst alle Aufgabenergebnisse.";
         aufgabe_loeschen_submit_button.remove();
     }
