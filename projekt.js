@@ -36,6 +36,12 @@ const aufgabe_erstellen_aufgabeninhalt_input = document.getElementById("aufgabe_
 const aufgabe_erstellen_cancel_button = document.getElementById("aufgabe_erstellen_cancel_button");
 var aufgabe_erstellen_submit_button = document.getElementById("aufgabe_erstellen_submit_button");
 
+const projekt_loeschen_icon = document.getElementById("projekt_loeschen_icon");
+const projekt_loeschen_overlay = document.getElementById("projekt_loeschen_overlay");
+const projekt_loeschen_info = document.getElementById("projekt_loeschen_info");
+const projekt_loeschen_cancel_button = document.getElementById("projekt_loeschen_cancel_button");
+const projekt_loeschen_submit_button = document.getElementById("projekt_loeschen_submit_button");
+
 const file_upload_overlay = document.getElementById("file_upload_overlay");
 const file_upload_button = document.getElementById("file_upload_button");
 const file_upload_input_field = document.getElementById("file_upload_input_field");
@@ -67,8 +73,18 @@ file_upload_submit_button.addEventListener("click", function(event) {
     uploadFile();
 });
 
+projekt_loeschen_overlay.style.display = "none";
+
 projekt_bearbeiten_overlay.style.display = "none";
 aufgabe_erstellen_overlay.style.display = "none";
+
+projekt_loeschen_icon.addEventListener("click", () => {
+    projekt_loeschen_overlay.style.display = "block";
+});
+
+projekt_loeschen_cancel_button.addEventListener("click", () => {
+    projekt_loeschen_overlay.style.display = "none";
+});
 
 aufgabe_erstellen_cancel_button.addEventListener("click", () => {
     aufgabe_erstellen_overlay.style.display = "none";
@@ -104,6 +120,10 @@ projekt_bearbeiten_submit_button.addEventListener("click", function(event) {
     changeProjekt();
 });
 
+projekt_loeschen_submit_button.addEventListener("click", () => {
+    delete_projekt();
+});
+
 aufgabe_erstellen_submit_button.type = "button";
 var newButton = aufgabe_erstellen_submit_button.cloneNode(true);
 aufgabe_erstellen_submit_button.parentNode.replaceChild(newButton, aufgabe_erstellen_submit_button);
@@ -120,6 +140,21 @@ function set_card_to_message(card_id, message) {
     
     card.parentElement.appendChild(message_div);
     card.remove();
+}
+
+function delete_projekt() {
+
+    const projektRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+
+    projektRef.delete()
+    .then(() => {
+        console.log("Projekt gelöscht");
+
+        location.href = "/home";
+    })
+    .catch((error) => {
+        console.error("Fehler beim Löschen des Projekts:", error);
+    });
 }
 
 function create_aufgabe_table_row(aufgabe_id, status) {
@@ -485,6 +520,10 @@ async function buildPage_all(user) {
     if (Object.keys(information.dateien).length === 0) {
         set_card_to_message("projektdokumente_card", "Es wurde noch keine Datei hinzugefügt");
     }
+    else {
+        projekt_loeschen_info.innerText = "Bitte löschen Sie zuerst alle Projektdokumente.";
+        projekt_loeschen_submit_button.remove();
+    }
 
     var aufgaben_abgeschlossen = 0;
 
@@ -506,6 +545,9 @@ async function buildPage_all(user) {
     }
     else {
         aufgaben_progress_bar.style.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";
+
+        projekt_loeschen_info.innerText = "Bitte löschen Sie zuerst alle zugehörigen Aufgaben.";
+        projekt_loeschen_submit_button.remove();
     }
 
     breadcrum_projekt.innerText = information.projekt.titel;
@@ -541,6 +583,9 @@ async function buildPage_staff(user) {
     file_upload_button.remove();
     file_upload_overlay.remove();
     projekt_fertigstellen_button.remove();
+
+    projekt_loeschen_icon.remove();
+    projekt_loeschen_overlay.remove();
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {

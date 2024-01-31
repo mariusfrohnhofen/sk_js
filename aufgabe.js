@@ -171,9 +171,8 @@ function create_datei_table_row(datei_id) {
 }
 
 function delete_aufgabe() {
-    const projekt_id = get_projekt_id_from_aufgaben_id(information.aufgabe.id);
 
-    const projektRef = db.collection("companies").doc(information.company.id).collection("projects").doc(projekt_id);
+    const projektRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
 
     projektRef.update({
         aufgaben: firebase.firestore.FieldValue.arrayRemove(information.aufgabe.id)
@@ -182,10 +181,10 @@ function delete_aufgabe() {
         console.log("Aufgabe aus Array gelöscht");
 
         const aufgabeRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
-        aufgabeRef.remove()
+        aufgabeRef.delete()
         .then(() => {
             console.log("Aufgabe gelöscht");
-            location.href = "/projekt?id=" + projekt_id;
+            location.href = "/projekt?id=" + information.projekt.id;
         })
         .catch((error) => {
             console.error("Fehler beim Löschen der Aufgabe:", error);

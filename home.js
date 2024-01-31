@@ -114,6 +114,14 @@ function get_projekt_id_from_aufgaben_id(aufgaben_id) {
     return found_projekt_id
 }
 
+function set_card_to_message(card_id, message) {
+    const message_div = create_div(["text-100", "medium"], message, {textAlign: "center"});
+    const card = document.getElementById(card_id);
+    
+    card.parentElement.appendChild(message_div);
+    card.remove();
+}
+
 async function getInformation(user) {
     const usermatching_info = await db.collection("usermatching").doc("WJobxOFznceM4Cw1hRZd").get();
 
@@ -148,8 +156,8 @@ async function getInformation(user) {
             const aufgaben_snapshot = await aufgaben_doc.get();
 
             information["aufgaben"][aufgaben_id] = aufgaben_snapshot.data();
-        })
-    })
+        });
+    });
 
     // Mitarbeiter der Firma abrufen
     const mitarbeiter_ref = company_ref.collection("users");
@@ -185,6 +193,10 @@ async function buildPage_admin(user) {
         const status = get_projekt_status(information, projekt_id);
         project_rows.appendChild(create_projekt_table_row(projekt_id, status));
     }
+
+    if (Object.keys(information.projekte).length === 0) {
+        set_card_to_message("project_card", "Es wurde noch kein Projekt erstellt");
+    }
 }
 
 async function buildPage_staff(user) {
@@ -192,6 +204,8 @@ async function buildPage_staff(user) {
     projects_section_container.remove();
     create_new_project_button.remove();
     heading.innerText = "Alle Aufgaben";
+
+    var count_aufgaben = 0;
 
     for (aufgabe_id in information.aufgaben) {
 
@@ -201,6 +215,12 @@ async function buildPage_staff(user) {
 
         const status = get_aufgabe_status(aufgabe_id);
         aufgaben_rows.appendChild(create_aufgabe_table_row(aufgabe_id, status));
+
+        count_aufgaben++;
+    }
+
+    if (count_aufgaben === 0) {
+        set_card_to_message("aufgaben_card", "Ihnen wurden noch keine Aufgaben zugeteilt");
     }
 }
 
