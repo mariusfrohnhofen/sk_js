@@ -1,4 +1,4 @@
-// v1.0.16
+// v1.0.20
 
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
@@ -35,6 +35,8 @@ const breadcrum_home_text = document.getElementById("breadcrum_home_text");
 const aufgabe_reminder_container = document.getElementById("aufgabe_reminder_container");
 const aufgabe_reminder_speichern_button = document.getElementById("aufgabe_reminder_speichern_button");
 const aufgabe_reminder_input_field = document.getElementById("aufgabe_reminder_input_field");
+
+const aufgabenergebnisse_rows = document.getElementById("aufgabenergebnisse_rows");
 
 const status_badge = document.getElementById("status_badge");
 
@@ -129,6 +131,36 @@ aufgabe_reminder_speichern_button.addEventListener("click", function(event) {
 
     put_aufgabendate_to_db(eingabe_datum);
 });
+
+function create_datei_table_row(datei_id) {
+
+    const datei_table_data_row = create_div(klassen=["datei-table-data-row"]);
+
+    const datei_data = information.dateien[datei_id];
+    const ersteller = information.mitarbeiter[datei_data.ersteller].vorname + " " + information.mitarbeiter[datei_data.ersteller].nachname;
+
+    const datei_a = document.createElement("a");
+    datei_a.classList.add("text-100", "bold");
+    datei_a.innerText = datei_data.titel;
+    datei_a.href = "#";
+    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_data.file_id + "');");
+    datei_a.style.justifySelf = "start";
+
+    datei_table_data_row.appendChild(datei_a);
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=formatFileSize(datei_data.size)));
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(datei_data.erstellungsdatum)));
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=ersteller));
+
+    const close_icon_wrapper = create_div(klassen=["close-icon-wrapper"]);
+    close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "first"]));
+    close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "second"]));
+
+    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_data.file_id + "')");
+    
+    datei_table_data_row.appendChild(close_icon_wrapper);
+
+    return datei_table_data_row
+}
 
 function aufgabe_fertigstellen() {
     const docRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
@@ -356,41 +388,6 @@ function downloadFile(filePath, fileName) {
     });
 }
 
-function get_aufgabenergebnis_data_row(file_id, file_name, erstellungsdatum, ersteller) {
-    const table_row_div = document.createElement("div");
-    table_row_div.classList.add("data-table-row-3", "ergebnisse");
-
-    const aufgabenergebnis_dateiname_a = document.createElement("a");
-    aufgabenergebnis_dateiname_a.classList.add("doc-link");
-    aufgabenergebnis_dateiname_a.innerText = file_name;
-    aufgabenergebnis_dateiname_a.href = "#";
-    aufgabenergebnis_dateiname_a.setAttribute("onClick", "javascript: downloadFile('" + file_id + "', '" + file_name + "');");
-    aufgabenergebnis_dateiname_a.setAttribute("file_id", file_id);
-    table_row_div.appendChild(aufgabenergebnis_dateiname_a);
-
-    const aufgabenergebnis_datum_div = document.createElement("div");
-    aufgabenergebnis_datum_div.classList.add("text-612", "medium");
-    aufgabenergebnis_datum_div.innerText = datestring_to_visual_date(erstellungsdatum);
-    table_row_div.appendChild(aufgabenergebnis_datum_div);
-
-    const aufgabenergebnis_mitarbeiter_div = document.createElement("div");
-    aufgabenergebnis_mitarbeiter_div.classList.add("text-612", "medium");
-    aufgabenergebnis_mitarbeiter_div.innerText = information.mitarbeiter[ersteller].vorname + " " + information.mitarbeiter[ersteller].nachname;
-    table_row_div.appendChild(aufgabenergebnis_mitarbeiter_div);
-
-    const aufgabenergebnis_close_icon_wrapper_div = document.createElement("div");
-    aufgabenergebnis_close_icon_wrapper_div.classList.add("close-icon-wrapper", "dateien");
-    const close_icon_first = document.createElement("div");
-    close_icon_first.classList.add("close-icon-line-4", "first");
-    const close_icon_second = document.createElement("div");
-    close_icon_second.classList.add("close-icon-line-4", "second");
-    aufgabenergebnis_close_icon_wrapper_div.appendChild(close_icon_first);
-    aufgabenergebnis_close_icon_wrapper_div.appendChild(close_icon_second);
-    aufgabenergebnis_close_icon_wrapper_div.setAttribute("onClick", "javascript: deleteFile('" + file_id + "')");
-    table_row_div.appendChild(aufgabenergebnis_close_icon_wrapper_div);
-
-    return table_row_div;
-}
 
 async function getInformation(user) {
     const usermatching_info = await db.collection("usermatching").doc("WJobxOFznceM4Cw1hRZd").get();
@@ -477,15 +474,7 @@ async function buildPage_all(user) {
     zum_projekt_button.href = "/projekt?id=" + information.projekt.id;
 
     information.aufgabe.dateien.forEach((datei_id) => {
-
-        const aufgabenergebnis_table_row = get_aufgabenergebnis_data_row(
-            information.dateien[datei_id].file_id,
-            information.dateien[datei_id].titel,
-            information.dateien[datei_id].erstellungsdatum,
-            information.dateien[datei_id].ersteller
-        )
-
-        document.getElementById("aufgabenergebnisse_rows").appendChild(aufgabenergebnis_table_row);
+        aufgabenergebnisse_rows.appendChild(create_datei_table_row(datei_id));
     });
 
     if (information.aufgabe.prognostiziertes_abschlussdatum != null) {

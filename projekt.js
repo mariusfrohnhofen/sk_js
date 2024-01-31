@@ -1,4 +1,4 @@
-// v1.0.19
+// v1.0.20
 
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
@@ -130,6 +130,14 @@ function create_div(klassen=[], inner_text="", styles={}) {
     return new_div
 }
 
+function set_card_to_message(card_id, message) {
+    const message_div = create_div(["text-100", "medium"], message, {textAlign: "center"});
+    const card = document.getElementById(card_id);
+    
+    card.parentElement.appendChild(message_div);
+    card.remove();
+}
+
 function create_aufgabe_table_row(aufgabe_id, status) {
 
     const aufgabe_data = information.aufgaben[aufgabe_id];
@@ -140,7 +148,7 @@ function create_aufgabe_table_row(aufgabe_id, status) {
 
     aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "bold"], inner_text=aufgabe_data.titel, {justifySelf: "start"}));
     aufgabe_table_data_row.appendChild(create_div(klassen=["badge", status.color], inner_text=status.label));
-    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=verantwortlicher, {justifySelf: "start"}));
+    aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=verantwortlicher));
     aufgabe_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(aufgabe_data.prognostiziertes_abschlussdatum)));
 
     aufgabe_table_data_row.addEventListener("click", () => {
@@ -161,7 +169,7 @@ function create_datei_table_row(datei_id) {
     datei_a.classList.add("text-100", "bold");
     datei_a.innerText = datei_data.titel;
     datei_a.href = "#";
-    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_id + "');");
+    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_data.file_id + "');");
     datei_a.style.justifySelf = "start";
 
     datei_table_data_row.appendChild(datei_a);
@@ -173,7 +181,7 @@ function create_datei_table_row(datei_id) {
     close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "first"]));
     close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "second"]));
 
-    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_id + "')");
+    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_data.file_id + "')");
     
     datei_table_data_row.appendChild(close_icon_wrapper);
 
@@ -619,6 +627,10 @@ async function buildPage_all(user) {
         projektdokumente_rows.appendChild(create_datei_table_row(datei_id));
     }
 
+    if (information.dateien.length == 0) {
+        set_card_to_message("projektdokumente_card", "Es wurden noch keine Dokumente hinzugefügt");
+    }
+
     var aufgaben_abgeschlossen = 0;
 
     for (aufgabe_id in information.aufgaben) {
@@ -634,6 +646,8 @@ async function buildPage_all(user) {
 
     if (information.projekt.aufgaben.length == 0) {
         aufgaben_progress_bar.style.width = "0%";
+
+        set_card_to_message("aufgaben_card", "Es wurden noch keine Aufgaben erstellt");
     }
     else {
         aufgaben_progress_bar.style.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";

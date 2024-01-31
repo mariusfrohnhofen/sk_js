@@ -1,4 +1,4 @@
-// v1.0.19
+// v1.0.20
 
 //  Reference to Webflow UI elements
 const dropdown_company_name = document.getElementById("dropdown_company_name");
@@ -15,6 +15,9 @@ const create_new_project_button = document.getElementById("create_new_project_bu
 
 const projects_section_container = document.getElementById("projects_section_container");
 const aufgaben_section_container = document.getElementById("aufgaben_section_container");
+
+const project_rows = document.getElementById("project_rows");
+const aufgaben_rows = document.getElementById("aufgaben_rows");
 
 const currentPath = window.location.pathname;
 
@@ -351,9 +354,7 @@ async function buildPage_admin(user) {
     for (projekt_id in information.projekte) {
 
         const status = get_projekt_status(projekt_id);
-        const projekt_table_row = create_projekt_table_row(projekt_id, status);
-
-        document.getElementById("project_rows_div").appendChild(projekt_table_row);
+        project_rows.appendChild(create_projekt_table_row(projekt_id, status));
     }
 }
 
@@ -370,9 +371,7 @@ async function buildPage_staff(user) {
         }
 
         const status = get_aufgabe_status(aufgabe_id);
-        const aufgabe_table_row = create_aufgabe_table_row(aufgabe_id, status);
-
-        document.getElementById("aufgabe_rows_div").appendChild(aufgabe_table_row);
+        aufgaben_rows.appendChild(create_aufgabe_table_row(aufgabe_id, status));
     }
 }
 
