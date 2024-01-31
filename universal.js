@@ -68,10 +68,10 @@ function get_aufgabe_status(info, aufgabe_id) {
     var aufgabe_data = null;
 
     if ("aufgaben" in info) {
-        aufgabe_data = info.aufgabe;
+        aufgabe_data = info.aufgaben[aufgabe_id];
     }
     else {
-        aufgabe_data = info.aufgaben[aufgabe_id];
+        aufgabe_data = info.aufgabe;
     }
 
     if (aufgabe_data.finished) {
