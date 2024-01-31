@@ -176,7 +176,7 @@ function delete_aufgabe() {
     const projektRef = db.collection("companies").doc(information.company.id).collection("projects").doc(projekt_id);
 
     projektRef.update({
-        aufgaben: firebase.firestore.FieldValue.arrayRemove(information.aufgabe.id);
+        aufgaben: firebase.firestore.FieldValue.arrayRemove(information.aufgabe.id)
     })
     .then(() => {
         console.log("Aufgabe aus Array gelöscht");
