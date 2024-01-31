@@ -26,6 +26,12 @@ const aufgabe_bearbeiten_cancel_button = document.getElementById("aufgabe_bearbe
 const aufgabe_bearbeiten_voraussichtliche_fertigstellung_input = document.getElementById("aufgabe_bearbeiten_voraussichtliche_fertigstellung_input");
 var aufgabe_bearbeiten_submit_button = document.getElementById("aufgabe_bearbeiten_submit_button");
 
+const aufgabe_loeschen_icon = document.getElementById("aufgabe_loeschen_icon");
+const aufgabe_loeschen_overlay = document.getElementById("aufgabe_loeschen_overlay");
+const aufgabe_loeschen_info = document.getElementById("aufgabe_loeschen_info");
+const aufgabe_loeschen_cancel_button = document.getElementById("aufgabe_loeschen_cancel_button");
+const aufgabe_loeschen_submit_button = document.getElementById("aufgabe_loeschen_submit_button");
+
 const aufgabe_fertigstellen_button = document.getElementById("aufgabe_fertigstellen_button");
 
 const breadcrum_projekt = document.getElementById("breadcrum_projekt");
@@ -58,10 +64,20 @@ var information = {
     "mitarbeiter": {}
 };
 
+aufgabe_loeschen_overlay.style.display = "none";
+
 file_upload_input_field.type = "file";
 file_upload_overlay.style.display = "none";
 file_upload_button.addEventListener("click", () => {
     file_upload_overlay.style.display = "block";
+});
+
+aufgabe_loeschen_icon.addEventListener("click", () => {
+    aufgabe_loeschen_overlay.style.display = "block";
+});
+
+aufgabe_loeschen_cancel_button.addEventListener("click", () => {
+    aufgabe_loeschen_overlay.style.display = "none";
 });
 
 aufgabe_bearbeiten_button.addEventListener("click", () => {
@@ -148,6 +164,32 @@ function create_datei_table_row(datei_id) {
     datei_table_data_row.appendChild(close_icon_wrapper);
 
     return datei_table_data_row
+}
+
+function delete_aufgabe() {
+    const projekt_id = get_projekt_id_from_aufgaben_id(information.aufgabe.id);
+
+    const projektRef = db.collection("companies").doc(information.company.id).collection("projects").doc(projekt_id);
+
+    projektRef.update({
+        aufgaben: firebase.firestore.FieldValue.arrayRemove(information.aufgabe.id);
+    })
+    .then(() => {
+        console.log("Aufgabe aus Array gelöscht");
+
+        const aufgabeRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
+        aufgabeRef.remove()
+        .then(() => {
+            console.log("Aufgabe gelöscht");
+            location.href = "/projekt?id=" + projekt_id;
+        })
+        .catch((error) => {
+            console.error("Fehler beim Löschen der Aufgabe:", error);
+        });
+    })
+    .catch((error) => {
+        console.error("Fehler beim Löschen aus Array:", error);
+    });
 }
 
 function aufgabe_fertigstellen() {
@@ -418,6 +460,9 @@ async function buildPage_all(user) {
 
     if (information.aufgabe.dateien.length === 0) {
         set_card_to_message("aufgabenergebnisse_card", "Es wurde noch keine Datei hinzugefügt");
+
+        aufgabe_loeschen_info.innerText = "Bitte löschen Sie zuerst alle Aufgabenergebnisse.";
+        aufgabe_loeschen_submit_button.remove();
     }
 
     if (information.aufgabe.prognostiziertes_abschlussdatum != null) {
@@ -455,6 +500,9 @@ async function buildPage_admin(user) {
 
 async function buildPage_staff(user) {
     breadcrum_home_text.innerText = "Meine Aufgabenübersicht";
+
+    aufgabe_loeschen_icon.remove();
+    aufgabe_loeschen_overlay.remove();
 
     if (information.aufgabe.verantwortlicher != information.user.id) {
         aufgabe_bearbeiten_button.remove();

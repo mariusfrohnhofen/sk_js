@@ -250,7 +250,7 @@ function changeProjekt() {
     const new_auftraggeber = projekt_bearbeiten_auftraggeber_input.value;
     const new_deadline = projekt_bearbeiten_deadline_input.value;
     const new_beschreibung = projekt_bearbeiten_beschreibung_input.value;
-    const new_auftragssumme = projekt_bearbeiten_auftragssumme_input.value;
+    const new_auftragssumme = parseFloat(projekt_bearbeiten_auftragssumme_input.value);
 
     const docRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
 
