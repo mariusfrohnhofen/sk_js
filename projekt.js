@@ -627,8 +627,8 @@ async function buildPage_all(user) {
         projektdokumente_rows.appendChild(create_datei_table_row(datei_id));
     }
 
-    if (information.dateien.length == 0) {
-        set_card_to_message("projektdokumente_card", "Es wurden noch keine Dokumente hinzugefügt");
+    if (Object.keys(information.dateien).length === 0) {
+        set_card_to_message("projektdokumente_card", "Es wurde noch keine Datei hinzugefügt");
     }
 
     var aufgaben_abgeschlossen = 0;
@@ -644,10 +644,10 @@ async function buildPage_all(user) {
 
     document.getElementById("aufgaben_counter").innerText = aufgaben_abgeschlossen + " / " + information.projekt.aufgaben.length;
 
-    if (information.projekt.aufgaben.length == 0) {
+    if (information.projekt.aufgaben.length === 0) {
         aufgaben_progress_bar.style.width = "0%";
 
-        set_card_to_message("aufgaben_card", "Es wurden noch keine Aufgaben erstellt");
+        set_card_to_message("aufgaben_card", "Es wurde noch keine Aufgabe erstellt");
     }
     else {
         aufgaben_progress_bar.style.width = ((aufgaben_abgeschlossen / information.projekt.aufgaben.length) * 100) + "%";

@@ -132,6 +132,30 @@ aufgabe_reminder_speichern_button.addEventListener("click", function(event) {
     put_aufgabendate_to_db(eingabe_datum);
 });
 
+function create_div(klassen=[], inner_text="", styles={}) {
+    const new_div = document.createElement("div");
+    
+    klassen.forEach((klasse) => {
+        new_div.classList.add(klasse);
+    });
+
+    new_div.innerText = inner_text;
+
+    for (s in styles) {
+        new_div.style[s] = styles[s];
+    }
+
+    return new_div
+}
+
+function set_card_to_message(card_id, message) {
+    const message_div = create_div(["text-100", "medium"], message, {textAlign: "center"});
+    const card = document.getElementById(card_id);
+    
+    card.parentElement.appendChild(message_div);
+    card.remove();
+}
+
 function create_datei_table_row(datei_id) {
 
     const datei_table_data_row = create_div(klassen=["datei-table-data-row"]);
@@ -476,6 +500,10 @@ async function buildPage_all(user) {
     information.aufgabe.dateien.forEach((datei_id) => {
         aufgabenergebnisse_rows.appendChild(create_datei_table_row(datei_id));
     });
+
+    if (information.aufgabe.dateien.length === 0) {
+        set_card_to_message("aufgabenergebnisse_card", "Es wurde noch keine Datei hinzugefügt");
+    }
 
     if (information.aufgabe.prognostiziertes_abschlussdatum != null) {
         aufgabe_reminder_container.style.display = "none";
