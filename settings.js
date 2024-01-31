@@ -90,16 +90,6 @@ function buildPage_all(user) {
     mitarbeiter_abteilung_input.value = information.user.position;
 }
 
-function remove_overlay() {
-    const overlay = document.getElementById("site_overlay");
-    overlay.style.transition = "opacity 0.5s ease";
-    overlay.style.opacity = 0;
-
-    setTimeout(function() {
-        overlay.remove();
-    }, 1000);
-}
-
 const auth = firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
         await getInformation(user);

@@ -17,14 +17,6 @@ submit_button.addEventListener("click", function(event) {
     createProject();
 });
 
-function get_today_string() {
-    var heute = new Date();
-    var jahr = heute.getFullYear();
-    var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
-    var tag = ('0' + heute.getDate()).slice(-2);
-    return jahr + '-' + monat + '-' + tag;
-}
-
 deadline_input.type = "date";
 deadline_input.min = get_today_string();
 
@@ -109,16 +101,6 @@ async function getInformation(user) {
 async function buildPage_all(user) {
     dropdown_company_name.innerText = information["company"]["name"];
     dropdown_user_name.innerText = information["user"]["vorname"] + " " + information["user"]["nachname"];
-}
-
-function remove_overlay() {
-    const overlay = document.getElementById("site_overlay");
-    overlay.style.transition = "opacity 0.5s ease";
-    overlay.style.opacity = 0;
-
-    setTimeout(function() {
-        overlay.remove();
-    }, 1000);
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {

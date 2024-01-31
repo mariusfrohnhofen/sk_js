@@ -114,22 +114,6 @@ aufgabe_erstellen_submit_button.addEventListener("click", function(event) {
     createAufgabe();
 });
 
-function create_div(klassen=[], inner_text="", styles={}) {
-    const new_div = document.createElement("div");
-    
-    klassen.forEach((klasse) => {
-        new_div.classList.add(klasse);
-    });
-
-    new_div.innerText = inner_text;
-
-    for (s in styles) {
-        new_div.style[s] = styles[s];
-    }
-
-    return new_div
-}
-
 function set_card_to_message(card_id, message) {
     const message_div = create_div(["text-100", "medium"], message, {textAlign: "center"});
     const card = document.getElementById(card_id);
@@ -173,7 +157,7 @@ function create_datei_table_row(datei_id) {
     datei_a.style.justifySelf = "start";
 
     datei_table_data_row.appendChild(datei_a);
-    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=formatFileSize(datei_data.size)));
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=format_file_size(datei_data.size)));
     datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(datei_data.erstellungsdatum)));
     datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=ersteller));
 
@@ -186,29 +170,6 @@ function create_datei_table_row(datei_id) {
     datei_table_data_row.appendChild(close_icon_wrapper);
 
     return datei_table_data_row
-}
-
-function get_tage_differenz(von, bis) {
-    if (von == "-" || bis == "-" || bis == null) {
-        return "-";
-    }
-
-    var date1 = new Date(von);
-    var date2 = new Date(bis);
-
-    var millis = date2 - date1;
-
-    return millis / (1000 * 60 * 60 * 24);
-}
-
-function formatFileSize(bytes) {
-    if (bytes === 0 || bytes === undefined) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-
-    const i = parseInt(Math.floor(Math.log(bytes) / Math.log(k)));
-
-    return Math.round(10 * (bytes / Math.pow(k, i))) / 10 + ' ' + sizes[i];
 }
 
 function projekt_fertigstellen() {
@@ -279,14 +240,6 @@ function uploadFile() {
     } else {
         console.error("No file selected.");
     }
-}
-
-function get_today_string() {
-    var heute = new Date();
-    var jahr = heute.getFullYear();
-    var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
-    var tag = ('0' + heute.getDate()).slice(-2);
-    return jahr + '-' + monat + '-' + tag;
 }
 
 projekt_bearbeiten_deadline_input.type = "date";
@@ -365,76 +318,6 @@ var information = {
     "dateien": {},
     "mitarbeiter": {}
 };
-
-function formatEuro(number) {
-    // Die 'de-DE' Locale wird verwendet, um das Euro-Format zu erzwingen
-    const formattedEuro = number.toLocaleString('de-DE', {
-        style: 'currency',
-        currency: 'EUR'
-    });
-  
-    return formattedEuro;
-}
-
-function get_projekt_status() {
-    var alle_aufgaben_abgeschlossen = true;
-
-    if (information.projekt.finished) {
-        return {
-            label: "Abgeschlossen",
-            color: "green"
-        }
-    }
-
-    for (aufgaben_id in information.aufgaben) {
-        if (!information.aufgaben[aufgaben_id].finished) {
-            alle_aufgaben_abgeschlossen = false;
-        }
-
-        if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
-            return {
-                label: "Handlungsbedarf",
-                color: "red"
-            }
-        }
-
-        if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
-            return {
-                label: "Handlungsbedarf",
-                color: "red"
-            }
-        }
-    }
-
-    if (get_today_string() > information.projekt.deadline) {
-        return {
-            label: "Überzogen",
-            color: "red"
-        }
-    }
-
-    if (alle_aufgaben_abgeschlossen) {
-        return {
-            label: "Bereit",
-            color: "blue"
-        }
-    }
-
-    return {
-        label: "Offen",
-        color: "orange"
-    }
-}
-
-function datestring_to_visual_date(datestring) {
-    if (datestring == null) {
-        return "-";
-    }
-
-    var date_parts = datestring.split("-");
-
-    return `${date_parts[2]}.${date_parts[1]}.${date_parts[0]}`;
-}
 
 function downloadFile(filePath) {
     // Referenz auf die Datei erstellen
@@ -581,34 +464,6 @@ function get_voraussichtliche_fertigstellung_string() {
     return datestring_to_visual_date(highest_datum)
 }
 
-function get_aufgabe_status(aufgaben_id) {
-    if (information.aufgaben[aufgaben_id].finished) {
-        return {
-            label: "Abgeschlossen",
-            color: "green"
-        }
-    }
-
-    if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
-        return {
-            label: "Handlungsbedarf",
-            color: "red"
-        }
-    }
-
-    if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
-        return {
-            label: "Überzogen",
-            color: "red"
-        }
-    }
-
-    return {
-        label: "Offen",
-        color: "orange"
-    }
-}
-
 async function buildPage_all(user) {
     dropdown_company_name.innerText = information["company"]["name"];
     dropdown_user_name.innerText = information["user"]["vorname"] + " " + information["user"]["nachname"];
@@ -618,7 +473,7 @@ async function buildPage_all(user) {
     days_left_text.innerText = get_tage_differenz(get_today_string(), information.projekt.deadline);
 
     projektinfos_auftraggeber.innerText = information.projekt.auftraggeber;
-    projektinfos_auftragssumme.innerText = formatEuro(information["projekt"]["dealvolumen"]);
+    projektinfos_auftragssumme.innerText = format_euro(information["projekt"]["dealvolumen"]);
     projektinfos_deadline.innerText = datestring_to_visual_date(information["projekt"]["deadline"]);
     projektinfos_voraussichtliche_fertigstellung.innerText = get_voraussichtliche_fertigstellung_string();
     projektinfos_beschreibung.innerText = information.projekt.beschreibung;
@@ -638,7 +493,7 @@ async function buildPage_all(user) {
             aufgaben_abgeschlossen++;
         }
 
-        const status = get_aufgabe_status(aufgabe_id);
+        const status = get_aufgabe_status(information, aufgabe_id);
         aufgaben_rows.appendChild(create_aufgabe_table_row(aufgabe_id, status));
     }
 
@@ -668,7 +523,7 @@ async function buildPage_all(user) {
         aufgabe_erstellen_mitarbeiter_select.appendChild(mitarbeiter_option);
     }
 
-    const status = get_projekt_status();
+    const status = get_projekt_status(information, information.projekt.id);
 
     status_badge.classList.add(status.color);
     status_badge.innerText = status.label;
@@ -686,16 +541,6 @@ async function buildPage_staff(user) {
     file_upload_button.remove();
     file_upload_overlay.remove();
     projekt_fertigstellen_button.remove();
-}
-
-function remove_overlay() {
-    const overlay = document.getElementById("site_overlay");
-    overlay.style.transition = "opacity 0.5s ease";
-    overlay.style.opacity = 0;
-
-    setTimeout(function() {
-        overlay.remove();
-    }, 1000);
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {

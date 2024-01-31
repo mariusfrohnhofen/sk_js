@@ -29,22 +29,6 @@ var information = {
     "mitarbeiter": {}
 };
 
-function create_div(klassen=[], inner_text="", styles={}) {
-    const new_div = document.createElement("div");
-    
-    klassen.forEach((klasse) => {
-        new_div.classList.add(klasse);
-    });
-
-    new_div.innerText = inner_text;
-
-    for (s in styles) {
-        new_div.style[s] = styles[s];
-    }
-
-    return new_div
-}
-
 function create_aufgabe_table_row(aufgabe_id, status) {
     const projekt_id = get_projekt_id_from_aufgaben_id(aufgabe_id);
 
@@ -82,73 +66,13 @@ function create_projekt_table_row(projekt_id, status) {
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=information.projekte[projekt_id].auftraggeber, {justifySelf: "start"}));
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(get_fertigstellung_datum(projekt_id))));
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=`${get_tage_differenz(get_today_string(), information.projekte[projekt_id].deadline)} Tage`));
-    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=formatEuro(information.projekte[projekt_id].dealvolumen)));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=format_euro(information.projekte[projekt_id].dealvolumen)));
 
     projekt_table_data_row.addEventListener("click", (event) => {
         location.href = "/projekt?id=" + projekt_id;
     });
     
     return projekt_table_data_row
-}
-
-function uploadFile() {
-    const fileInput = document.getElementById('fileInput');
-    const file = fileInput.files[0];
-
-    if (file) {
-        const storageRef = storage.ref();
-        const fileRef = storageRef.child(file.name);
-
-        fileRef.put(file).then((snapshot) => {
-            console.log('File Uploaded Successfully!');
-            // Hier könntest du weitere Aktionen ausführen, z.B. die URL der hochgeladenen Datei verwenden.
-        }).catch((error) => {
-            console.error('Error uploading file:', error);
-        });
-    } else {
-        console.error('No file selected.');
-    }
-}
-
-function datestring_to_visual_date(datestring) {
-    if (datestring == null || datestring == "-") {
-        return "-";
-    }
-
-    var date_parts = datestring.split("-");
-
-    return `${date_parts[2]}.${date_parts[1]}.${date_parts[0]}`;
-}
-
-function formatEuro(number) {
-    // Die 'de-DE' Locale wird verwendet, um das Euro-Format zu erzwingen
-    const formattedEuro = number.toLocaleString('de-DE', {
-        style: 'currency',
-        currency: 'EUR'
-    });
-  
-    return formattedEuro;
-}
-
-function get_tage_differenz(von, bis) {
-    if (von == "-" || bis == "-" || bis == null) {
-        return "-";
-    }
-
-    var date1 = new Date(von);
-    var date2 = new Date(bis);
-
-    var millis = date2 - date1;
-
-    return millis / (1000 * 60 * 60 * 24);
-}
-
-function get_today_string() {
-    var heute = new Date();
-    var jahr = heute.getFullYear();
-    var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
-    var tag = ('0' + heute.getDate()).slice(-2);
-    return jahr + '-' + monat + '-' + tag;
 }
 
 function get_fertigstellung_datum(projekt_id) {
@@ -188,101 +112,6 @@ function get_projekt_id_from_aufgaben_id(aufgaben_id) {
     }
 
     return found_projekt_id
-}
-
-function get_aufgabe_status(aufgaben_id) {
-    if (information.aufgaben[aufgaben_id].finished) {
-        return {
-            label: "Abgeschlossen",
-            color: "green"
-        }
-    }
-
-    if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
-        return {
-            label: "Handlungsbedarf",
-            color: "red"
-        }
-    }
-
-    if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
-        return {
-            label: "Überzogen",
-            color: "red"
-        }
-    }
-
-    return {
-        label: "Offen",
-        color: "orange"
-    }
-}
-
-function get_projekt_status(projekt_id) {
-    var condition_found = false;
-    var status = null;
-    var alle_aufgaben_abgeschlossen = true;
-
-    information.projekte[projekt_id].aufgaben.forEach((aufgaben_id) => {
-        if (condition_found) {
-            return
-        }
-
-        if (!information.aufgaben[aufgaben_id].finished) {
-            alle_aufgaben_abgeschlossen = false;
-        }
-
-        if (information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum == null) {
-            status = {
-                label: "Handlungsbedarf",
-                color: "red"
-            }
-            condition_found = true;
-            return
-        }
-
-        if (get_today_string() > information.aufgaben[aufgaben_id].prognostiziertes_abschlussdatum) {
-            status = {
-                label: "Handlungsbedarf",
-                color: "red"
-            }
-            condition_found = true;
-            return
-        }
-    });
-
-    if (alle_aufgaben_abgeschlossen) {
-        status = {
-            label: "Bereit",
-            color: "blue"
-        }
-        condition_found = true;
-    }
-
-    if (get_today_string() > information.projekte[projekt_id].deadline) {
-        status = {
-            label: "Überzogen",
-            color: "red"
-        }
-        condition_found = true;
-    }
-
-    if (information.projekte[projekt_id].finished) {
-        status = {
-            label: "Abgeschlossen",
-            color: "green"
-        }
-        condition_found = true;
-    }
-
-    if (condition_found) {
-        return status;
-    }
-
-    return {
-        label: "Offen",
-        color: "orange"
-    }
 }
 
 async function getInformation(user) {
@@ -353,7 +182,7 @@ async function buildPage_admin(user) {
     
     for (projekt_id in information.projekte) {
 
-        const status = get_projekt_status(projekt_id);
+        const status = get_projekt_status(information, projekt_id);
         project_rows.appendChild(create_projekt_table_row(projekt_id, status));
     }
 }
@@ -373,16 +202,6 @@ async function buildPage_staff(user) {
         const status = get_aufgabe_status(aufgabe_id);
         aufgaben_rows.appendChild(create_aufgabe_table_row(aufgabe_id, status));
     }
-}
-
-function remove_overlay() {
-    const overlay = document.getElementById("site_overlay");
-    overlay.style.transition = "opacity 0.5s ease";
-    overlay.style.opacity = 0;
-
-    setTimeout(function() {
-        overlay.remove();
-    }, 1000);
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {

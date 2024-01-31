@@ -44,27 +44,6 @@ const days_left_text = document.getElementById("days_left_text");
 
 const currentPath = window.location.pathname;
 
-function get_tage_differenz(von, bis) {
-    if (von == "-" || bis == "-" || bis == null) {
-        return "-";
-    }
-
-    var date1 = new Date(von);
-    var date2 = new Date(bis);
-
-    var millis = date2 - date1;
-
-    return millis / (1000 * 60 * 60 * 24);
-}
-
-function get_today_string() {
-    var heute = new Date();
-    var jahr = heute.getFullYear();
-    var monat = ('0' + (heute.getMonth() + 1)).slice(-2); // Monate sind 0-basiert, deshalb +1
-    var tag = ('0' + heute.getDate()).slice(-2);
-    return jahr + '-' + monat + '-' + tag;
-}
-
 aufgabe_reminder_input_field.type = "date";
 aufgabe_reminder_input_field.min = get_today_string();
 
@@ -78,6 +57,7 @@ var information = {
     "dateien": {},
     "mitarbeiter": {}
 };
+
 file_upload_input_field.type = "file";
 file_upload_overlay.style.display = "none";
 file_upload_button.addEventListener("click", () => {
@@ -132,22 +112,6 @@ aufgabe_reminder_speichern_button.addEventListener("click", function(event) {
     put_aufgabendate_to_db(eingabe_datum);
 });
 
-function create_div(klassen=[], inner_text="", styles={}) {
-    const new_div = document.createElement("div");
-    
-    klassen.forEach((klasse) => {
-        new_div.classList.add(klasse);
-    });
-
-    new_div.innerText = inner_text;
-
-    for (s in styles) {
-        new_div.style[s] = styles[s];
-    }
-
-    return new_div
-}
-
 function set_card_to_message(card_id, message) {
     const message_div = create_div(["text-100", "medium"], message, {textAlign: "center"});
     const card = document.getElementById(card_id);
@@ -171,7 +135,7 @@ function create_datei_table_row(datei_id) {
     datei_a.style.justifySelf = "start";
 
     datei_table_data_row.appendChild(datei_a);
-    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=formatFileSize(datei_data.size)));
+    datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=format_file_size(datei_data.size)));
     datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(datei_data.erstellungsdatum)));
     datei_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=ersteller));
 
@@ -199,34 +163,6 @@ function aufgabe_fertigstellen() {
     .catch((error) => {
         console.error("Fehler beim abschließen der Aufgabe:", error);
     });
-}
-
-function get_aufgabe_status() {
-    if (information.aufgabe.finished) {
-        return {
-            label: "Abgeschlossen",
-            color: "green"
-        }
-    }
-
-    if (information.aufgabe.prognostiziertes_abschlussdatum == null) {
-        return {
-            label: "Handlungsbedarf",
-            color: "red"
-        }
-    }
-
-    if (get_today_string() > information.aufgabe.prognostiziertes_abschlussdatum) {
-        return {
-            label: "Überzogen",
-            color: "red"
-        }
-    }
-
-    return {
-        label: "Offen",
-        color: "orange"
-    }
 }
 
 function put_aufgabendate_to_db(aufgabendate) {
@@ -368,26 +304,6 @@ function deleteFile(file_id) {
     }
 }
 
-function formatEuro(number) {
-    // Die 'de-DE' Locale wird verwendet, um das Euro-Format zu erzwingen
-    const formattedEuro = number.toLocaleString('de-DE', {
-        style: 'currency',
-        currency: 'EUR'
-    });
-  
-    return formattedEuro;
-}
-
-function datestring_to_visual_date(datestring) {
-    if (datestring == null) {
-        return "-";
-    }
-
-    var date_parts = datestring.split("-");
-
-    return `${date_parts[2]}.${date_parts[1]}.${date_parts[0]}`;
-}
-
 function downloadFile(filePath, fileName) {
     // Referenz auf die Datei erstellen
     const fileRef = storage.ref().child(filePath);
@@ -411,7 +327,6 @@ function downloadFile(filePath, fileName) {
         console.error("Fehler beim Abrufen der Download-URL:", error);
     });
 }
-
 
 async function getInformation(user) {
     const usermatching_info = await db.collection("usermatching").doc("WJobxOFznceM4Cw1hRZd").get();
@@ -528,7 +443,7 @@ async function buildPage_all(user) {
     breadcrum_projekt.getElementsByTagName("div")[0].innerText = information.projekt.titel;
     breadcrum_aufgabe.innerText = information.aufgabe.titel;
 
-    const status = get_aufgabe_status();
+    const status = get_aufgabe_status(information, information.aufgabe.id);
 
     status_badge.classList.add(status.color);
     status_badge.innerText = status.label;
@@ -547,16 +462,6 @@ async function buildPage_staff(user) {
         aufgabe_fertigstellen_button.remove();
         aufgabe_reminder_container.remove();
     }
-}
-
-function remove_overlay() {
-    const overlay = document.getElementById("site_overlay");
-    overlay.style.transition = "opacity 0.5s ease";
-    overlay.style.opacity = 0;
-
-    setTimeout(function() {
-        overlay.remove();
-    }, 1000);
 }
 
 const auth = firebase.auth().onAuthStateChanged(async (user) => {
