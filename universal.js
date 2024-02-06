@@ -179,6 +179,13 @@ function get_projekt_status(info, projekt_id) {
     }
 }
 
+function normalize_filename(filename) {
+    // Dateinamen normalisieren (ersetze Leerzeichen durch Unterstriche)
+    const normalizedFilename = filename.replace(/\s+/g, '_');
+
+    return normalizedFilename;
+}
+
 function remove_overlay() {
     const overlay = document.getElementById("site_overlay");
     overlay.style.transition = "opacity 0.5s ease";

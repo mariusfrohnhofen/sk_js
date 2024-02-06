@@ -151,7 +151,7 @@ function create_datei_table_row(datei_id) {
     datei_a.classList.add("text-100", "bold");
     datei_a.innerText = datei_data.titel;
     datei_a.href = "#";
-    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_data.file_id + "');");
+    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_id + "');");
     datei_a.style.justifySelf = "start";
 
     datei_table_data_row.appendChild(datei_a);
@@ -163,7 +163,7 @@ function create_datei_table_row(datei_id) {
     close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "first"]));
     close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "second"]));
 
-    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_data.file_id + "')");
+    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_id + "')");
     
     datei_table_data_row.appendChild(close_icon_wrapper);
 
@@ -254,20 +254,21 @@ function changeAufgabe() {
 }
 
 function uploadFile() {
-    file_upload_submit_button.innerText = "Bitte warten...";
+    file_upload_submit_button.value = "Bitte warten...";
     file_upload_submit_button.disabled = true;
     const file = file_upload_input_field.files[0];
 
-    const file_id = uuidv4();
+    const directory_id = uuidv4();
+    const file_id = `${directory_id}/${normalize_filename(file.name)}`
+    const file_path = `${information.company.id}/${information.aufgabe.id}/${file_id}`;
 
     if (file) {
         const storageRef = storage.ref();
-        const fileRef = storageRef.child(file_id);
+        const fileRef = storageRef.child(file_path);
 
         fileRef.put(file).then((snapshot) => {
             console.log("File uploaded successfully");
 
-            const document_id = uuidv4();
             const document_data = {
                 ersteller: information.user.id,
                 erstellungsdatum: get_today_string(),
@@ -276,99 +277,80 @@ function uploadFile() {
                 size: file.size
             }
 
-            const collectionRef = db.collection("companies").doc(information.company.id).collection("dateien");
+            const collectionRef = db.collection("companies").doc(information.aufgabe.id).collection("dateien");
 
             collectionRef.add(document_data)
-                .then((docRef) => {
-                    console.log("Dokument erfolgreich hinzugefügt. ID:", docRef.id);
+            .then((docRef) => {
+                console.log("Dokument erfolgreich hinzugefügt. ID:", docRef.id);
 
-                    const documentRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
+                const documentRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
 
-                    documentRef.update({
-                        dateien: firebase.firestore.FieldValue.arrayUnion(docRef.id)
-                    })
-                    .then(() => {
-                        console.log("Datei zum Array hinzugefügt");
-                        location.reload();
-                    })
-                    .catch((error) => {
-                        console.error("Fehler beim Hinzufügen der Datei zum Array:", error);
-                    });
+                documentRef.update({
+                    dateien: firebase.firestore.FieldValue.arrayUnion(docRef.id)
+                })
+                .then(() => {
+                    console.log("Datei zum Array hinzugefügt");
+                    location.reload();
                 })
                 .catch((error) => {
-                    console.error("Fehler beim Hinzufügen des Dokuments:", error);
+                    console.error("Fehler beim Hinzufügen der Datei zum Array:", error);
                 });
+            })
+            .catch((error) => {
+                console.error("Fehler beim Hinzufügen des Dokuments:", error);
+            });
 
-        }).catch((error) => {
-            console.error("Error uploading file");
+        })
+        .catch((error) => {
+            console.error("Error uploading file:", error);
         });
     } else {
         console.error("No file selected.");
     }
 }
 
-function deleteFile(file_id) {
-    for (const datei_id in information.dateien) {
-        if (information.dateien[datei_id].file_id !== file_id) {
-            continue
-        }
+function deleteFile(datei_id) {
+    const document_ref = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
+    const file_path = `${information.company.id}/${information.aufgabe.id}/${information.dateien[datei_id].file_id}`
 
-        const documentRef = db.collection("companies").doc(information.company.id).collection("aufgaben").doc(information.aufgabe.id);
+    document_ref.update({
+        dateien: firebase.firestore.FieldValue.arrayRemove(datei_id)
+    })
+    .then(() => {
+        console.log("Datei aus Array gelöscht");
 
-        documentRef.update({
-            dateien: firebase.firestore.FieldValue.arrayRemove(datei_id)
-        })
+        const dateiDocumentRef = db.collection("companies").doc(information.company.id).collection("dateien").doc(datei_id);
+
+        dateiDocumentRef.delete()
         .then(() => {
-            console.log("Datei aus Array gelöscht");
-            console.log("Datei ID", datei_id)
-            const dateiDocumentRef = db.collection("companies").doc(information.company.id).collection("dateien").doc(datei_id);
+            console.log("Dokument aus Collection gelöscht:", datei_id);
 
-            console.log(dateiDocumentRef);
+            const fileRef = storage.ref().child(file_path);
 
-            dateiDocumentRef.delete()
+            fileRef.delete()
             .then(() => {
-                console.log("Dokument aus Collection gelöscht:", datei_id);
-
-                const fileRef = storage.ref().child(file_id);
-
-                fileRef.delete()
-                .then(() => {
-                    console.log("Datei aus Storage gelöscht:", file_id);
-                    location.reload();
-                })
-                .catch((error) => {
-                    console.error("Fehler beim Löschen der Datei aus Storage:", error);
-                });
+                console.log("Datei aus Storage gelöscht:", file_id);
+                location.reload();
             })
             .catch((error) => {
-                console.error("Fehler beim Löschen des Dokuments aus der Collection:", error);
+                console.error("Fehler beim Löschen der Datei aus Storage:", error);
             });
         })
         .catch((error) => {
-            console.error("Fehler beim Löschen der Datei aus dem Array:", error);
+            console.error("Fehler beim Löschen des Dokuments aus der Collection:", error);
         });
-    }
+    })
+    .catch((error) => {
+        console.error("Fehler beim Löschen der Datei aus dem Array:", error);
+    });
 }
 
-function downloadFile(filePath, fileName) {
-    // Referenz auf die Datei erstellen
-    const fileRef = storage.ref().child(filePath);
+function downloadFile(datei_id) {
+    const file_path = `${information.company.id}/${information.aufgabe.id}/${information.dateien[datei_id].file_id}`
+    const fileRef = storage.ref().child(file_path);
 
-    // Download-URL für die Datei abrufen
     fileRef.getDownloadURL().then((downloadURL) => {
-        // Erstellen eines unsichtbaren <a>-Elements zum Herunterladen
-        const link = document.createElement("a");
-        link.href = downloadURL;
-        link.download = fileName;
-
-        // An das Dokument anhängen
-        document.body.appendChild(link);
-
-        // Klick auf das unsichtbare <a>-Element, um den Download zu starten
-        link.click();
-
-        // Das <a>-Element entfernen, da es nicht mehr benötigt wird
-        document.body.removeChild(link);
+        window.open(downloadURL);
     }).catch((error) => {
         console.error("Fehler beim Abrufen der Download-URL:", error);
     });

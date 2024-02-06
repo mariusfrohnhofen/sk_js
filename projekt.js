@@ -188,7 +188,7 @@ function create_datei_table_row(datei_id) {
     datei_a.classList.add("text-100", "bold");
     datei_a.innerText = datei_data.titel;
     datei_a.href = "#";
-    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_data.file_id + "');");
+    datei_a.setAttribute("onClick", "javascript: downloadFile('" + datei_id + "');");
     datei_a.style.justifySelf = "start";
 
     datei_table_data_row.appendChild(datei_a);
@@ -200,7 +200,7 @@ function create_datei_table_row(datei_id) {
     close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "first"]));
     close_icon_wrapper.appendChild(create_div(klassen=["close-icon-line-3", "second"]));
 
-    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_data.file_id + "')");
+    close_icon_wrapper.setAttribute("onClick", "javascript: deleteFile('" + datei_id + "')");
     
     datei_table_data_row.appendChild(close_icon_wrapper);
 
@@ -227,16 +227,17 @@ function uploadFile() {
     file_upload_submit_button.disabled = true;
     const file = file_upload_input_field.files[0];
 
-    const file_id = uuidv4();
+    const directory_id = uuidv4();
+    const file_id = `${directory_id}/${normalize_filename(file.name)}`
+    const file_path = `${information.company.id}/${information.projekt.id}/${file_id}`;
 
     if (file) {
         const storageRef = storage.ref();
-        const fileRef = storageRef.child(file_id);
+        const fileRef = storageRef.child(file_path);
 
         fileRef.put(file).then((snapshot) => {
             console.log("File uploaded successfully");
 
-            const document_id = uuidv4();
             const document_data = {
                 ersteller: information.user.id,
                 erstellungsdatum: get_today_string(),
@@ -354,11 +355,10 @@ var information = {
     "mitarbeiter": {}
 };
 
-function downloadFile(filePath) {
-    // Referenz auf die Datei erstellen
-    const fileRef = storage.ref().child(filePath);
+function downloadFile(datei_id) {
+    const file_path = `${information.company.id}/${information.projekt.id}/${information.dateien[datei_id].file_id}`
+    const fileRef = storage.ref().child(file_path);
 
-    // Download-URL für die Datei abrufen
     fileRef.getDownloadURL().then((downloadURL) => {
         window.open(downloadURL);
     }).catch((error) => {
@@ -366,47 +366,40 @@ function downloadFile(filePath) {
     });
 }
 
-function deleteFile(file_id) {
-    for (const datei_id in information.dateien) {
-        if (information.dateien[datei_id].file_id !== file_id) {
-            continue
-        }
+function deleteFile(datei_id) {
+    const document_ref = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+    const file_path = `${information.company.id}/${information.projekt.id}/${information.dateien[datei_id].file_id}`
 
-        const documentRef = db.collection("companies").doc(information.company.id).collection("projects").doc(information.projekt.id);
+    document_ref.update({
+        dateien: firebase.firestore.FieldValue.arrayRemove(datei_id)
+    })
+    .then(() => {
+        console.log("Datei aus Array gelöscht");
 
-        documentRef.update({
-            dateien: firebase.firestore.FieldValue.arrayRemove(datei_id)
-        })
+        const dateiDocumentRef = db.collection("companies").doc(information.company.id).collection("dateien").doc(datei_id);
+
+        dateiDocumentRef.delete()
         .then(() => {
-            console.log("Datei aus Array gelöscht");
-            console.log("Datei ID", datei_id)
-            const dateiDocumentRef = db.collection("companies").doc(information.company.id).collection("dateien").doc(datei_id);
+            console.log("Dokument aus Collection gelöscht:", datei_id);
 
-            console.log(dateiDocumentRef);
+            const fileRef = storage.ref().child(file_path);
 
-            dateiDocumentRef.delete()
+            fileRef.delete()
             .then(() => {
-                console.log("Dokument aus Collection gelöscht:", datei_id);
-
-                const fileRef = storage.ref().child(file_id);
-
-                fileRef.delete()
-                .then(() => {
-                    console.log("Datei aus Storage gelöscht:", file_id);
-                    location.reload();
-                })
-                .catch((error) => {
-                    console.error("Fehler beim Löschen der Datei aus Storage:", error);
-                });
+                console.log("Datei aus Storage gelöscht:", file_id);
+                location.reload();
             })
             .catch((error) => {
-                console.error("Fehler beim Löschen des Dokuments aus der Collection:", error);
+                console.error("Fehler beim Löschen der Datei aus Storage:", error);
             });
         })
         .catch((error) => {
-            console.error("Fehler beim Löschen der Datei aus dem Array:", error);
+            console.error("Fehler beim Löschen des Dokuments aus der Collection:", error);
         });
-    }
+    })
+    .catch((error) => {
+        console.error("Fehler beim Löschen der Datei aus dem Array:", error);
+    });
 }
 
 async function getInformation(user) {
