@@ -277,7 +277,7 @@ function uploadFile() {
                 size: file.size
             }
 
-            const collectionRef = db.collection("companies").doc(information.aufgabe.id).collection("dateien");
+            const collectionRef = db.collection("companies").doc(information.company.id).collection("dateien");
 
             collectionRef.add(document_data)
             .then((docRef) => {
@@ -329,7 +329,7 @@ function deleteFile(datei_id) {
 
             fileRef.delete()
             .then(() => {
-                console.log("Datei aus Storage gelöscht:", file_id);
+                console.log("Datei aus Storage gelöscht");
                 location.reload();
             })
             .catch((error) => {

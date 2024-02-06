@@ -386,7 +386,7 @@ function deleteFile(datei_id) {
 
             fileRef.delete()
             .then(() => {
-                console.log("Datei aus Storage gelöscht:", file_id);
+                console.log("Datei aus Storage gelöscht");
                 location.reload();
             })
             .catch((error) => {
