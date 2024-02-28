@@ -388,7 +388,7 @@ function sort_and_create_prios() {
     })
 }
 
-async function buildPage_all(user) {
+async function build_page(user) {
     dropdown_company_name.innerText = information["company"]["name"];
     dropdown_user_name.innerText = information["user"]["vorname"] + " " + information["user"]["nachname"];
 }
