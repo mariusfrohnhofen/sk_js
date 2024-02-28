@@ -479,6 +479,9 @@ async function buildPage_all(user) {
 
     status_badge.classList.add(status.color);
     status_badge.innerText = status.label;
+
+    aufgabe_bearbeiten_voraussichtliche_fertigstellung_input.max = information.projekt.deadline;
+    aufgabe_reminder_input_field.max = information.projekt.deadline;
 }
 
 async function buildPage_admin(user) {

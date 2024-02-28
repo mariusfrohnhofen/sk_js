@@ -13,6 +13,8 @@ const alle_aufgaben_tables = document.getElementById("alle_aufgaben_tables");
 const heading = document.getElementById("heading");
 const create_new_project_button = document.getElementById("create_new_project_button");
 
+const to_prio_planer_button = document.getElementById("to_prio_planer_button");
+
 const projects_section_container = document.getElementById("projects_section_container");
 const aufgaben_section_container = document.getElementById("aufgaben_section_container");
 
@@ -62,9 +64,9 @@ function create_projekt_table_row(projekt_id, status) {
 
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "bold"], inner_text=information.projekte[projekt_id].titel, {justifySelf: "start"}));
     projekt_table_data_row.appendChild(create_div(klassen=["badge", status.color], inner_text=status.label));
-    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=`${aufgaben_abgeschlossen}/${information['projekte'][projekt_id]['aufgaben'].length}`));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=`${information.projekte[projekt_id].wahrscheinlichkeit}%`));
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=information.projekte[projekt_id].auftraggeber, {justifySelf: "start"}));
-    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=datestring_to_visual_date(get_fertigstellung_datum(projekt_id))));
+    projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=information.projekte[projekt_id].produktinfo));
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=`${get_tage_differenz(get_today_string(), information.projekte[projekt_id].deadline)} Tage`));
     projekt_table_data_row.appendChild(create_div(klassen=["text-100", "medium"], inner_text=format_euro(information.projekte[projekt_id].dealvolumen)));
 
@@ -203,6 +205,7 @@ async function buildPage_staff(user) {
 
     projects_section_container.remove();
     create_new_project_button.remove();
+    to_prio_planer_button.remove();
     heading.innerText = "Alle Aufgaben";
 
     var count_aufgaben = 0;
